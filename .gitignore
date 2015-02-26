@@ -1,3 +1,5 @@
 _info.txt
-nimcache
+doc
 etc
+nimcache
+*.exe
