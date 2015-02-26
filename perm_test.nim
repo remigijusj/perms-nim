@@ -76,7 +76,7 @@ suite "basic tests":
   test "conjugate 0a":
     let p = randomPerm(6)
     let q = identity(8)
-    check(p.conjugate(q).isEqual(p) == true)
+    check(p.conjugate(q) == p)
 
   test "conjugate 1":
     let p = newPerm(@[1, 2, 0])
@@ -112,17 +112,17 @@ suite "basic tests":
 
   test "isEqual 0":
     let p = newPerm(@[])
-    check(p.isEqual(p) == true)
+    check(p == p)
 
   test "isEqual 1":
     let p = newPerm(@[0])
-    check(p.isEqual(p) == true)
+    check(p == p)
 
   test "isEqual 2":
     let p = newPerm(@[0, 1])
     let q = newPerm(@[0, 1, 2])
-    check(p.isEqual(q) == true)
-    check(q.isEqual(p) == true)
+    check(p == q)
+    check(q == p)
 
 
   test "signature 0":
@@ -191,6 +191,14 @@ suite "basic tests":
     check(p.order == 4)
     check(p.orderToCycle(4) == -1)
 
+  test "signature 7":
+    let p = newPerm(@[1, 0, 3, 4, 2, 6, 7, 8, 9, 5])
+    check(p.signature == @[0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0])
+    check(p.sign == -1)
+    check(p.order == 30)
+    check(p.orderToCycle(2) == 15)
+    check(p.orderToCycle(2, 10) == -1)
+
 
   test "parseCycles invalid":
     expect PError:
@@ -242,10 +250,9 @@ suite "basic tests":
     check($ p == "[0 1 2 3 4 9 8 5 10 11 12 7 6]")
 
 
-# TODO: sensible constructor? elements is private
-#  test "printCycles 0":
-#    let p = Perm(elements: @[])
-#    check(p.printCycles == "()")
+  test "printCycles 0":
+    let p = Perm(@[])
+    check(p.printCycles == "()")
 
   test "printCycles 1":
     let p = newPerm(@[])
