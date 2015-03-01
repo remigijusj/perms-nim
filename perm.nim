@@ -8,6 +8,8 @@ type P = uint8
 
 type Perm* = array[N, P]
 
+type Signature* = array[N+1, int]
+
 type PermErr* = object of Exception
 
 
@@ -47,6 +49,9 @@ proc randomPerm*: Perm =
     swap(result[i], result[j])
 
 
+proc size*(p: Perm): int = N
+
+
 proc `$`*(d: P): string =
   $(int(d)+1)
 
@@ -60,17 +65,25 @@ proc `$`*(p: Perm): string =
   result.add "]"
 
 
-proc size*(p: Perm): int = N
+proc `==`*(p: Perm, q: Perm): bool =
+  for i in 0 .. <N:
+    if p[i] != q[i]:
+      return false
+
+  return true
+
+
+proc `[]`(p: Perm, x: P): P = p[int(x)]
 
 
 proc inverse*(p: Perm): Perm =
   for i in 0 .. <N:
-    result[int(p[i])] = P(i)
+    result[p[i]] = P(i)
 
 
 proc compose*(p: Perm, q: Perm): Perm =
   for i in 0 .. <N:
-    result[i] = q[int(p[i])]
+    result[i] = q[p[i]]
 
 
 proc power*(p: Perm, n: int): Perm =
@@ -81,33 +94,23 @@ proc power*(p: Perm, n: int): Perm =
     return p.inverse.power(-n)
 
   for i in 0 .. <N:
-    var k = i
+    var k = P(i)
     for j in 0 .. <n:
-      k = int(p[k])
+      k = p[k]
 
-    result[i] = P(k)
+    result[i] = k
 
 
 proc conjugate*(p: Perm, q: Perm): Perm =
   for i in 0 .. <N:
-    var j = int(q[i])
-    var k = int(p[i])
+    var j = q[i]
+    var k = p[i]
     result[j] = q[k]
 
 
 proc isIdentity*(p: Perm): bool =
   for i, v in p:
     if int(v) != i:
-      return false
-
-  return true
-
-
-#proc `==`*(x: Pt, y: Pt): bool = uint(x) == uint(y)
-
-proc `==`*(p: Perm, q: Perm): bool =
-  for i in 0 .. <N:
-    if int(p[i]) != int(q[i]):
       return false
 
   return true
@@ -131,18 +134,15 @@ proc lcm(a, b): auto =
   a * (b div gcd(a, b))
 
 
-proc signature*(p: Perm): seq[int] =
-  let size = N
-  result = newSeq[int](size+1)
-
-  var marks = newSeq[bool](size)
+proc signature*(p: Perm): Signature =
+  var marks: array[N, bool]
   var m = 0
   while true:
     # find next unmarked
-    while m < size and marks[m]:
+    while m < N and marks[m]:
       inc(m)
 
-    if m == size:
+    if m == N:
       break
 
     # trace a cycle
@@ -156,8 +156,7 @@ proc signature*(p: Perm): seq[int] =
     inc(result[cnt])
 
 
-proc sign*(p: Perm): int =
-  let sgn = p.signature
+proc signFrom(sgn: Signature): int =
   var sum = 0
   for i in countup(2, N, 2):
     sum += sgn[i]
@@ -170,22 +169,14 @@ proc sign*(p: Perm): int =
 
 # TODO: binary reduce, multi-lcm algorithm
 # TODO: control overflow of lcm
-proc order*(p: Perm): int =
-  # if N < 2:
-  #   return 1
-
-  let sgn = p.signature
+proc orderFrom(sgn: Signature): int =
   result = 1
   for i, v in sgn:
     if i >= 2 and v > 0:
       result = lcm(result, i)
 
 
-proc orderToCycle*(p: Perm, n: int, max = 0): int =
-  if n < 2:
-    return -1
-
-  let sgn = p.signature
+proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int =
   # there must be unique n-cycle
   if sgn[n] != 1:
     return -1
@@ -202,6 +193,19 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
         result = lcm(result, i)
         if max > 0 and result > max:
           return -1
+
+
+proc sign*(p: Perm): int = signFrom(p.signature)
+
+
+proc order*(p: Perm): int = orderFrom(p.signature)
+
+
+proc orderToCycle*(p: Perm, n: int, max = 0): int =
+  if n < 2:
+    -1
+  else:
+    orderToCycleFrom(p.signature, n, max)
 
 
 # ------ cycles ------
@@ -304,7 +308,6 @@ proc getCycles(p: Perm): seq[seq[P]] =
   return cycles
 
 
-# TODO: more efficient serialization?
 proc printCycles*(p: Perm): string =
   result = ""
   for cycle in p.getCycles:

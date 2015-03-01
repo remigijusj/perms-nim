@@ -111,39 +111,39 @@ suite "basic tests":
 
   test "signature 0":
     let p = newPerm(@[])
-    check(p.signature == @[0, 8, 0, 0, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 8, 0, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 1)
 
   test "signature 1":
     let p = newPerm(@[0])
-    check(p.signature == @[0, 8, 0, 0, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 8, 0, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 1)
 
   test "signature 2":
     let p = newPerm(@[1, 0])
-    check(p.signature == @[0, 6, 1, 0, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 6, 1, 0, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 2)
     check(p.orderToCycle(2) == 1)
 
   test "signature 4":
     let p = newPerm(@[1, 0, 3, 2])
-    check(p.signature == @[0, 4, 2, 0, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 4, 2, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 2)
     check(p.orderToCycle(2) == -1)
 
   test "signature 5a":
     let p = newPerm(@[1, 0, 3, 2, 4])
-    check(p.signature == @[0, 4, 2, 0, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 4, 2, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 2)
 
   test "signature 5c":
     let p = newPerm(@[1, 0, 3, 4, 2])
-    check(p.signature == @[0, 3, 1, 1, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 3, 1, 1, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
     check(p.orderToCycle(2) == 3)
@@ -151,26 +151,26 @@ suite "basic tests":
 
   test "signature 5d":
     let p = newPerm(@[0, 1, 3, 4, 2])
-    check(p.signature == @[0, 5, 0, 1, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 5, 0, 1, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 3)
     check(p.orderToCycle(3) == 1)
 
   test "signature 6a":
     let p = newPerm(@[1, 2, 3, 4, 5, 0])
-    check(p.signature == @[0, 2, 0, 0, 0, 0, 1, 0, 0])
+    check(p.signature == [0, 2, 0, 0, 0, 0, 1, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
 
   test "signature 6b":
     let p = newPerm(@[0, 2, 1, 4, 5, 3])
-    check(p.signature == @[0, 3, 1, 1, 0, 0, 0, 0, 0])
+    check(p.signature == [0, 3, 1, 1, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
 
   test "signature 6c":
     let p = newPerm(@[5, 4, 1, 2, 3, 0])
-    check(p.signature == @[0, 2, 1, 0, 1, 0, 0, 0, 0])
+    check(p.signature == [0, 2, 1, 0, 1, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 4)
     check(p.orderToCycle(4) == -1)
