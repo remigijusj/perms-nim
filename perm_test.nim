@@ -10,15 +10,15 @@ suite "basic tests":
 
   test "newPerm invalid":
     var p: Perm
-    expect PermErr:
+    expect PermError:
       p = newPerm(@[1, 2, 3, 4, 5, 6, 7])
-    expect PermErr:
+    expect PermError:
       p = newPerm(@[0, 0, 1])
-    expect PermErr:
+    expect PermError:
       p = newPerm(@[-2, 0, 1])
-    expect PermErr:
+    expect PermError:
       p = newPerm(@[0, 2, 3])
-    expect PermErr:
+    expect PermError:
       p = newPerm(@[3, 2, 3])
 
   test "identity valid":
@@ -177,15 +177,15 @@ suite "basic tests":
 
 
   test "parseCycles invalid 0":
-    expect PermErr:
+    expect PermError:
       discard parseCycles("(1 2 3 0)")
 
   test "parseCycles invalid 1":
-    expect PermErr:
+    expect PermError:
       discard parseCycles("(1 2)(2, 3)")
 
   test "parseCycles invalid 2":
-    expect PermErr:
+    expect PermError:
       discard parseCycles("(1, 2, 65537)")
 
 

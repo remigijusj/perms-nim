@@ -10,7 +10,7 @@ type Perm* = array[N, P]
 
 type Signature* = array[N+1, int]
 
-type PermErr* = object of Exception
+type PermError* = object of Exception
 
 
 # ------ basics ------
@@ -28,13 +28,13 @@ proc valid*(p: Perm): bool =
 
 proc newPerm*(data: seq[int]): Perm =
   if data.len > N:
-    raise PermErr.newException("seq length mismatch")
+    raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
     result[i] = P(data[i])
   for i in data.len .. <N:
     result[i] = P(i)
   if not result.valid:
-    raise PermErr.newException("seq invalid")
+    raise PermError.newException("seq invalid")
 
 
 proc identity*: Perm =
@@ -52,8 +52,10 @@ proc randomPerm*: Perm =
 proc size*(p: Perm): int = N
 
 
-proc `$`*(d: P): string =
-  $(int(d)+1)
+#proc `[]`(p: Perm, x: P): P = p[int(x)]
+
+
+proc `$`*(d: P): string = $(int(d)+1)
 
 
 proc `$`*(p: Perm): string =
@@ -71,9 +73,6 @@ proc `==`*(p: Perm, q: Perm): bool =
       return false
 
   return true
-
-
-proc `[]`(p: Perm, x: P): P = p[int(x)]
 
 
 proc inverse*(p: Perm): Perm =
@@ -168,17 +167,18 @@ proc signFrom(sgn: Signature): int =
 
 
 # TODO: binary reduce, multi-lcm algorithm
-# TODO: control overflow of lcm
-proc orderFrom(sgn: Signature): int =
+proc orderFrom(sgn: Signature, max = 0): int =
   result = 1
   for i, v in sgn:
     if i >= 2 and v > 0:
       result = lcm(result, i)
+      if max > 0 and result > max:
+        return -1
 
 
 proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int =
   # there must be unique n-cycle
-  if sgn[n] != 1:
+  if n > N or sgn[n] != 1:
     return -1
 
   result = 1
@@ -210,7 +210,7 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 
 # ------ cycles ------
 
-# TODO: optimize, perhaps no re?
+# TODO: optimize, avoid re?
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
 proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
@@ -224,9 +224,9 @@ proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
       part = -1
 
     if part == 0:
-      raise PermErr.newException("int can't be zero")
+      raise PermError.newException("int can't be zero")
     elif part > N:
-      raise PermErr.newException("int overflow")
+      raise PermError.newException("int overflow")
     elif part > 0:
       dec(part)
 
@@ -253,7 +253,7 @@ proc buildPermFromCycleRep(rep: tuple[parts: seq[int], max: int]): Perm =
     if part == -1:
       if first >= 0 and point >= 0:
         if int(perm[point]) != point:
-          raise PermErr.newException("integers must be unique")
+          raise PermError.newException("integers must be unique")
 
         perm[point] = P(first)
         first = -1
@@ -264,7 +264,7 @@ proc buildPermFromCycleRep(rep: tuple[parts: seq[int], max: int]): Perm =
         point = part
       else:
         if int(perm[point]) != point:
-          raise PermErr.newException("integers must be unique")
+          raise PermError.newException("integers must be unique")
 
         perm[point] = P(part)
         point = part
