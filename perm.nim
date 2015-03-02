@@ -12,8 +12,6 @@ type Signature* = array[N+1, int]
 
 type PermError* = object of Exception
 
-var sgn: Signature # global scratchpad
-
 
 # ------ basics ------
 
@@ -135,8 +133,9 @@ proc lcm(a, b): auto =
   a * (b div gcd(a, b))
 
 
-proc signatureSet(p: Perm) =
+proc signature*(p: Perm): Signature =
   var marks {.global.}: array[N, bool]
+  var sgn {.global.}: Signature
 
   # WARNING: unsafe, size matters
   zeroMem(addr(marks), N)
@@ -161,8 +160,10 @@ proc signatureSet(p: Perm) =
 
     inc(sgn[cnt])
 
+  result = sgn
 
-proc signFrom(sgn: Signature): int =
+
+proc signFrom(sgn: Signature): int {.noSideEffect.} =
   var sum = 0
   for i in countup(2, N, 2):
     sum += sgn[i]
@@ -174,7 +175,7 @@ proc signFrom(sgn: Signature): int =
 
 
 # TODO: binary reduce, multi-lcm algorithm
-proc orderFrom(sgn: Signature, max = 0): int =
+proc orderFrom(sgn: Signature, max = 0): int {.noSideEffect.} =
   result = 1
   for i, v in sgn:
     if i >= 2 and v > 0:
@@ -183,7 +184,7 @@ proc orderFrom(sgn: Signature, max = 0): int =
         return -1
 
 
-proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int =
+proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int {.noSideEffect.} =
   # there must be unique n-cycle
   if n > N or sgn[n] != 1:
     return -1
@@ -202,19 +203,10 @@ proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int =
           return -1
 
 
-proc signature*(p: Perm): Signature =
-  signatureSet(p)
-  sgn
+proc sign*(p: Perm): int = signFrom(p.signature)
 
 
-proc sign*(p: Perm): int =
-  signatureSet(p)
-  signFrom(sgn)
-
-
-proc order*(p: Perm): int =
-  signatureSet(p)
-  orderFrom(sgn)
+proc order*(p: Perm): int = orderFrom(p.signature)
 
 
 proc orderToCycle*(p: Perm, n: int, max = 0): int =
