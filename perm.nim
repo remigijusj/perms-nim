@@ -3,14 +3,16 @@ import algorithm, math, re, strutils, unsigned
 randomize()
 
 
-const N = 8
-type P = uint8
+const N* = 8 # <= 255
+type P* = uint8
 
 type Perm* = array[N, P]
 
 type Signature* = array[N+1, int]
 
 type PermError* = object of Exception
+
+var sgn: Signature # global scratchpad
 
 
 # ------ basics ------
@@ -133,8 +135,13 @@ proc lcm(a, b): auto =
   a * (b div gcd(a, b))
 
 
-proc signature*(p: Perm): Signature =
-  var marks: array[N, bool]
+proc signatureSet(p: Perm) =
+  var marks {.global.}: array[N, bool]
+
+  # WARNING: unsafe, size matters
+  zeroMem(addr(marks), N)
+  zeroMem(addr(sgn), N * 8)
+
   var m = 0
   while true:
     # find next unmarked
@@ -152,7 +159,7 @@ proc signature*(p: Perm): Signature =
       inc(cnt)
       j = int(p[j])
 
-    inc(result[cnt])
+    inc(sgn[cnt])
 
 
 proc signFrom(sgn: Signature): int =
@@ -195,10 +202,19 @@ proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int =
           return -1
 
 
-proc sign*(p: Perm): int = signFrom(p.signature)
+proc signature*(p: Perm): Signature =
+  signatureSet(p)
+  sgn
 
 
-proc order*(p: Perm): int = orderFrom(p.signature)
+proc sign*(p: Perm): int =
+  signatureSet(p)
+  signFrom(sgn)
+
+
+proc order*(p: Perm): int =
+  signatureSet(p)
+  orderFrom(sgn)
 
 
 proc orderToCycle*(p: Perm, n: int, max = 0): int =
