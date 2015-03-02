@@ -94,6 +94,27 @@ suite "basic tests":
     check(p.isIdentity == false)
 
 
+  test "isInvolution 0":
+    let p = newPerm(@[])
+    check(p.isInvolution == true)
+
+  test "isInvolution 1":
+    let p = newPerm(@[1, 0])
+    check(p.isInvolution == true)
+
+  test "isInvolution 2":
+    let p = newPerm(@[1, 2, 0])
+    check(p.isInvolution == false)
+
+  test "isInvolution 3":
+    let p = newPerm(@[1, 0, 3, 2])
+    check(p.isInvolution == true)
+
+  test "isInvolution 3":
+    let p = newPerm(@[1, 2, 3, 0])
+    check(p.isInvolution == false)
+
+
   test "isEqual 0":
     let p = newPerm(@[])
     check(p == p)

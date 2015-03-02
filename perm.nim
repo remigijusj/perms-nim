@@ -115,6 +115,15 @@ proc isIdentity*(p: Perm): bool =
   return true
 
 
+# optimized p.inverse == p
+proc isInvolution*(p: Perm): bool = 
+  for i in 0 .. <N:
+    if p[p[i]] != P(i):
+      return false
+
+  return true
+
+
 # ------ signature ------
 
 proc gcd(a, b): auto =
