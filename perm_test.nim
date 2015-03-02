@@ -81,6 +81,19 @@ suite "basic tests":
     check($ p.conjugate(q) == "[1 4 0 2 3 5 6 7]")
 
 
+  test "isZero 0":
+    let p = newPerm(@[])
+    check(p.isZero == false)
+
+  test "isZero 1":
+    let p = newPerm(@[0, 1])
+    check(p.isZero == false)
+
+  test "isZero 2":
+    let p: Perm = [0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8]
+    check(p.isZero == true)
+
+
   test "isIdentity 0":
     let p = newPerm(@[])
     check(p.isIdentity == true)

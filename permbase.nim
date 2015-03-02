@@ -1,7 +1,9 @@
 import perm, re, strutils
 
-
-type BaseItem = tuple[name: string, perm: Perm, inverse: int]
+type BaseItem = tuple
+  name: string
+  perm: Perm
+  inverse: int
 
 type PermBase* = seq[BaseItem]
 
@@ -49,40 +51,54 @@ proc normalize*(base: PermBase): PermBase =
       result.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
 
 
+proc composeSeq*(base: PermBase, list: seq[int]): Perm =
+  result = identity()
+  for i in list:
+    result = result * base[i].perm
+
+
+proc decompose(i, level, k: int): seq[int] =
+  var val = i
+  result = newSeq[int](level)
+  for i in countdown(level-1, 0):
+    result[i] = val mod k
+    val = val div k
+
+
 # TODO: pruning by i,j and base
-iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, i: int] =
+iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
   let n = base.len
+  var k: int
   for i, p in list:
     for j, it in base:
-      yield (p * it.perm, i * n + j)
+      k = i * n + j
+      if p.isZero:
+        yield (p, k)
+      else:
+        yield (p * it.perm, k)
 
 
-proc search*(base: PermBase; target, levels: int; max = 0; debug = false): tuple[p: Perm; i, size: int] =
+proc search*(base: PermBase; target, levels: int; max = 0; debug = false): tuple[p: Perm, s: seq[int], o: int] =
   let k = base.size
   var list: seq[Perm] = @[identity()]
   var mult: seq[Perm]
 
   for level in 1 .. levels:
     mult = newSeq[Perm](list.len * k)
-    for perm, i in list.multiply(base):
-      if perm.orderToCycle(target, max) > -1:
-        return (perm, i, level) # <<< mult.len
-      mult[i] = perm
-      if debug:
-        echo i, " ", printCycles(perm)
+    if debug: echo "--- ", level
+    for p, i in list.multiply(base):
+      if p.isZero or p.isIdentity:
+        continue
+      let ord = p.orderToCycle(target, max)
+      if ord > -1:
+        return (p, decompose(i, level, k), ord)
+      mult[i] = p
+      if debug: echo i, ": ", printCycles(p)
     swap(list, mult)
-    if debug:
-      echo "---"
 
-  return (identity(), -1, -1)
+  return (identity(), @[], -1)
 
 
 when isMainModule:
-  let base = parseBase("A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)")
-  let norm = base.normalize
-  let (p, i, s) = norm.search(3, 8, 0, false)
-  echo i, "/", s, " ", p.printCycles
-
-  let x = norm.toSeq
-  let r = compose(x[0], x[1], x[1])
-  echo r.printCycles
+  let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+  discard base.search(2, 4, 0, true)

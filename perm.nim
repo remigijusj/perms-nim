@@ -116,6 +116,14 @@ proc conjugate*(p: Perm, q: Perm): Perm =
     result[j] = q[k]
 
 
+proc isZero*(p: Perm): bool =
+  for i, v in p:
+    if int(v) != 0:
+      return false
+
+  return true
+
+
 proc isIdentity*(p: Perm): bool =
   for i, v in p:
     if int(v) != i:

@@ -23,7 +23,7 @@ suite "permbase":
     check(base[0].inverse == 0)
     check(base[1].inverse == 1)
 
-  test "multiply 0":
+  test "multiply":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = data.parseBase
     var list = newSeq[Perm](4)
@@ -33,3 +33,18 @@ suite "permbase":
     check(list[1].printCycles == "(1, 2, 4, 3)")
     check(list[2].printCycles == "(1, 2, 3, 4)")
     check(list[3].printCycles == "()")
+
+  test "search 0":
+    let base = parseBase("A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)")
+    let norm = base.normalize
+    let (p, s, o) = norm.search(3, 8)
+    check(p == norm.composeSeq(s))
+    check(s == @[0, 1, 1])
+    check(o == 5)
+
+  test "search 1":
+    let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+    let (p, s, o) = base.search(3, 4)
+    check(p.isIdentity == true)
+    check(s.len == 0)
+    check(o == -1)
