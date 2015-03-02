@@ -80,9 +80,18 @@ proc inverse*(p: Perm): Perm =
     result[p[i]] = P(i)
 
 
-proc compose*(p: Perm, q: Perm): Perm =
+proc `*`*(p: Perm, q: Perm): Perm =
   for i in 0 .. <N:
     result[i] = q[p[i]]
+
+
+proc compose*(list: varargs[Perm]): Perm =
+  var p: P
+  for i in 0 .. <N:
+    p = P(i)
+    for perm in list:
+      p = perm[p]
+    result[i] = p
 
 
 proc power*(p: Perm, n: int): Perm =
@@ -241,9 +250,9 @@ proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
       part = -1
 
     if part == 0:
-      raise PermError.newException("int can't be zero")
+      raise PermError.newException("int must be positive")
     elif part > N:
-      raise PermError.newException("int overflow")
+      raise PermError.newException("int too large")
     elif part > 0:
       dec(part)
 

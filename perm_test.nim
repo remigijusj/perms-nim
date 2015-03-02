@@ -41,10 +41,18 @@ suite "basic tests":
     check($ p.inverse == "[4 0 1 2 3 5 6 7]")
 
 
-  test "compose":
+  test "compose 0":
     let p = newPerm(@[1, 2, 0])
     let q = newPerm(@[0, 3, 4, 1, 2])
-    check($ p.compose(q) == "[3 4 0 1 2 5 6 7]")
+    check($(p * q) == "[3 4 0 1 2 5 6 7]")
+
+  test "compose 1":
+    let p = newPerm(@[1, 2, 0])
+    let q = newPerm(@[0, 3, 4, 1, 2])
+    let i = identity()
+    check($compose(p, i, q) == "[3 4 0 1 2 5 6 7]")
+    check($compose(p, q, i) == "[3 4 0 1 2 5 6 7]")
+    check($compose(@[p, q, i]) == "[3 4 0 1 2 5 6 7]")
 
 
   test "power":
