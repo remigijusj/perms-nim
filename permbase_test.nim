@@ -5,12 +5,12 @@ suite "permbase":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = data.parseBase
     check(base.sign == -1)
-    check(base.size == 2)
+    check(base.len == 2)
     check(base.printBase == data)
 
   test "random":
     let base = randomBase(3)
-    check(base.size == 3)
+    check(base.len == 3)
     check(base[0].name == "A")
     check(base[1].name == "B")
     check(base[2].name == "C")
@@ -19,14 +19,14 @@ suite "permbase":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = data.parseBase.normalize
     check(base.sign == -1)
-    check(base.size == 3)
+    check(base.len == 3)
     check(base[2].name == "A'")
     check(base[2].inverse == 0)
 
   test "normalize 1":
     let data = "A: (1, 2)\nB: (3, 4)"
     let base = data.parseBase.normalize
-    check(base.size == 2)
+    check(base.len == 2)
     check(base[0].inverse == 0)
     check(base[1].inverse == 1)
 

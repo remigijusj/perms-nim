@@ -32,9 +32,6 @@ proc randomBase*(size: int): PermBase =
     result[i] = (name, randomPerm(), -1)
 
 
-proc size*(base: PermBase): int = base.len
-
-
 proc toSeq*(base: PermBase): seq[Perm] =
   result = newSeq[Perm](base.len)
   for i, item in base:
@@ -88,7 +85,7 @@ iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
 
 
 proc search*(base: PermBase; levels: int; filter: proc(p: Perm): bool): tuple[p: Perm, s: seq[int]] =
-  let k = base.size
+  let k = base.len
   var list: seq[Perm] = @[identity()]
   var mult: seq[Perm]
 

@@ -23,17 +23,12 @@ suite "basic tests":
 
   test "identity valid":
     let p = identity()
-    check(p.size == 8)
+    check(p.len == 8)
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "randomPerm":
     let p = randomPerm()
-    check(p.size == 8)
-
-
-  test "size":
-    let p = newPerm(@[1, 3, 2, 0])
-    check(p.size == 8)
+    check(p.len == 8)
 
 
   test "inverse":

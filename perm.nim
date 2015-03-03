@@ -17,8 +17,6 @@ type PermError* = object of Exception
 
 # ------ basics ------
 
-proc size*(p: Perm): int = N
-
 
 proc valid*(p: Perm): bool =
   var check = p
