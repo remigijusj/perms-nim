@@ -1,5 +1,7 @@
 import perm, re, strutils
 
+var debug = false
+
 type BaseItem = tuple
   name: string
   perm: Perm
@@ -21,6 +23,13 @@ proc printBase*(base: PermBase): string =
     if i > 0:
       result.add "\n"
     result.add "$#: $#" % [item.name, printCycles(item.perm)]
+
+
+proc randomBase*(size: int): PermBase =
+  result = newSeq[BaseItem](size)
+  for i in 0 .. <size:
+    let name = $('A'.succ(i))
+    result[i] = (name, randomPerm(), -1)
 
 
 proc size*(base: PermBase): int = base.len
@@ -78,7 +87,7 @@ iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
         yield (p * it.perm, k)
 
 
-proc search*(base: PermBase; target, levels: int; max = 0; debug = false): tuple[p: Perm, s: seq[int], o: int] =
+proc search*(base: PermBase; levels: int; filter: proc(p: Perm): bool): tuple[p: Perm, s: seq[int]] =
   let k = base.size
   var list: seq[Perm] = @[identity()]
   var mult: seq[Perm]
@@ -89,16 +98,20 @@ proc search*(base: PermBase; target, levels: int; max = 0; debug = false): tuple
     for p, i in list.multiply(base):
       if p.isZero or p.isIdentity:
         continue
-      let ord = p.orderToCycle(target, max)
-      if ord > -1:
-        return (p, decompose(i, level, k), ord)
+      if filter(p):
+        return (p, decompose(i, level, k))
       mult[i] = p
       if debug: echo i, ": ", printCycles(p)
     swap(list, mult)
 
-  return (identity(), @[], -1)
+  return (identity(), @[])
+
+
+proc searchCycle*(base: PermBase; target, levels: int; max = 0): tuple[p: Perm, s: seq[int]] =
+  base.search(levels, proc(p: Perm): bool = p.orderToCycle(target, max) > -1)
 
 
 when isMainModule:
+  debug = true
   let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
-  discard base.search(2, 4, 0, true)
+  discard base.searchCycle(4, 2)
