@@ -1,4 +1,4 @@
-import algorithm, math, re, strutils, unsigned
+import algorithm, math, re, sequtils, strutils, unsigned
 
 randomize()
 
@@ -18,7 +18,7 @@ type PermError* = object of Exception
 # ------ basics ------
 
 
-proc valid*(p: Perm): bool =
+proc valid(p: Perm): bool =
   var check = p
   check.sort(system.cmp[P])
 
@@ -27,6 +27,15 @@ proc valid*(p: Perm): bool =
       return false
 
   return true
+
+
+# TODO: in-place
+proc rotateSeq[T](list: seq[T]): seq[T] =
+  var k: int
+  for i, val in list[1 .. list.high]:
+    if val < list[k]:
+      k = i
+  concat(list[k+1 .. list.high], list[0 .. k])
 
 
 proc newPerm*(data: seq[int]): Perm =
@@ -46,6 +55,8 @@ proc newCycle*(data: seq[int]): Cycle =
     raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
     result[i] = P(data[i])
+
+  # result = rotateSeq(result)
 
 
 proc identity*: Perm =
@@ -95,6 +106,8 @@ proc `==`*(p: Perm, q: array[N, int]): bool =
 
 
 proc `==`*(c: Cycle, d: seq[int]): bool =
+  # let e = rotateSeq(d)
+
   if c.len != d.len:
     return false
   for i in 0 .. <c.len:
@@ -149,6 +162,8 @@ proc conjugate*(c: Cycle, q: Perm): Cycle =
   result = newSeq[P](c.len)
   for i in 0 .. <c.len:
     result[i] = q[c[i]]
+
+  # result = rotateSeq(result)
 
 
 proc isZero*(p: Perm): bool =

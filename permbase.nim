@@ -46,7 +46,7 @@ proc sign*(base: PermBase): int =
   return 1
 
 
-# TODO: in-place?
+# TODO: in-place
 proc normalize*(base: PermBase): PermBase =
   result = base
   for i, item in base:
@@ -71,7 +71,6 @@ proc decompose(i, level, k: int): seq[int] =
     val = val div k
 
 
-# TODO: pruning by i,j and base
 iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
   let n = base.len
   var k: int
@@ -84,7 +83,7 @@ iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
         yield (p * it.perm, k)
 
 
-proc search*(base: PermBase; levels: int; filter: proc(p: Perm): bool): tuple[p: Perm, s: seq[int]] =
+iterator search*(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
   let k = base.len
   var list: seq[Perm] = @[identity()]
   var mult: seq[Perm]
@@ -95,17 +94,19 @@ proc search*(base: PermBase; levels: int; filter: proc(p: Perm): bool): tuple[p:
     for p, i in list.multiply(base):
       if p.isZero or p.isIdentity:
         continue
-      if filter(p):
-        return (p, decompose(i, level, k))
+      yield (p, i, level)
       mult[i] = p
       if debug: echo i, ": ", printCycles(p)
     swap(list, mult)
 
-  return (identity(), @[])
-
 
 proc searchCycle*(base: PermBase; target, levels: int; max = 0): tuple[p: Perm, s: seq[int]] =
-  base.search(levels, proc(p: Perm): bool = p.orderToCycle(target, max) > -1)
+  for p, i, level in base.search(levels):
+    if p.orderToCycle(target, max) > -1:
+      let s = decompose(i, level, base.len)
+      return (p, s)
+
+  return (identity(), @[])
 
 
 when isMainModule:
