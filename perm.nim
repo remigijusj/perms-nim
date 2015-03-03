@@ -8,12 +8,17 @@ type P* = uint8
 
 type Perm* = array[N, P]
 
+type Cycle* = seq[P]
+
 type Signature* = array[N+1, int]
 
 type PermError* = object of Exception
 
 
 # ------ basics ------
+
+proc size*(p: Perm): int = N
+
 
 proc valid*(p: Perm): bool =
   var check = p
@@ -37,6 +42,14 @@ proc newPerm*(data: seq[int]): Perm =
     raise PermError.newException("seq invalid")
 
 
+proc newCycle*(data: seq[int]): Cycle =
+  result = newSeq[P](data.len)
+  if data.len > N:
+    raise PermError.newException("seq length mismatch")
+  for i in 0 .. <data.len:
+    result[i] = P(data[i])
+
+
 proc identity*: Perm =
   for i in 0 .. <N:
     result[i] = P(i)
@@ -49,27 +62,45 @@ proc randomPerm*: Perm =
     swap(result[i], result[j])
 
 
-proc size*(p: Perm): int = N
-
-
 #proc `[]`(p: Perm, x: P): P = p[int(x)]
 
 
-proc `$`*(d: P): string = $(int(d)+1)
+#proc `$`*(d: P): string = $(int(d))
 
 
 proc `$`*(p: Perm): string =
   result = "["
   for i, e in p:
     if i > 0:
-      result.add " "
+      result.add ", "
     result.add($ int(e))
   result.add "]"
+
+
+proc `==`*(x: P, y: P): bool = int(x) == int(y)
 
 
 proc `==`*(p: Perm, q: Perm): bool =
   for i in 0 .. <N:
     if p[i] != q[i]:
+      return false
+
+  return true
+
+
+proc `==`*(p: Perm, q: array[N, int]): bool =
+  for i in 0 .. <N:
+    if int(p[i]) != int(q[i]):
+      return false
+
+  return true
+
+
+proc `==`*(c: Cycle, d: seq[int]): bool =
+  if c.len != d.len:
+    return false
+  for i in 0 .. <c.len:
+    if int(c[i]) != int(d[i]):
       return false
 
   return true
@@ -114,6 +145,12 @@ proc conjugate*(p: Perm, q: Perm): Perm =
     var j = q[i]
     var k = p[i]
     result[j] = q[k]
+
+
+proc conjugate*(c: Cycle, q: Perm): Cycle =
+  result = newSeq[P](c.len)
+  for i in 0 .. <c.len:
+    result[i] = q[c[i]]
 
 
 proc isZero*(p: Perm): bool =
@@ -258,9 +295,9 @@ proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
       part = -1
 
     if part == 0:
-      raise PermError.newException("int must be positive")
+      raise PermError.newException("integer must be positive")
     elif part > N:
-      raise PermError.newException("int too large")
+      raise PermError.newException("integer too large")
     elif part > 0:
       dec(part)
 
@@ -310,7 +347,7 @@ proc parseCycles*(data: string): Perm =
   buildPermFromCycleRep(scanCycleRep(data))
 
 
-proc getCycles(p: Perm): seq[seq[P]] =
+proc cycles*(p: Perm): seq[Cycle] =
   let size = N
   var cycles = newSeq[seq[P]]()
   var marks = newSeq[bool](size)
@@ -344,10 +381,10 @@ proc getCycles(p: Perm): seq[seq[P]] =
 
 proc printCycles*(p: Perm): string =
   result = ""
-  for cycle in p.getCycles:
+  for cycle in p.cycles:
     result.add "("
     for i, e in cycle:
       if i > 0:
         result.add ", "
-      result.add($e)
+      result.add($(e+1))
     result.add ")"

@@ -6,7 +6,7 @@ import perm, unittest
 suite "basic tests":
   test "constructor":
     let p: Perm = [1'u8, 0'u8, 2'u8, 3'u8, 4'u8, 5'u8, 6'u8, 7'u8]
-    check($ p == "[1 0 2 3 4 5 6 7]")
+    check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
   test "newPerm invalid":
     var p: Perm
@@ -24,7 +24,7 @@ suite "basic tests":
   test "identity valid":
     let p = identity()
     check(p.size == 8)
-    check($ p == "[0 1 2 3 4 5 6 7]")
+    check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "randomPerm":
     let p = randomPerm()
@@ -38,26 +38,26 @@ suite "basic tests":
 
   test "inverse":
     let p = newPerm(@[1, 2, 3, 4, 0])
-    check($ p.inverse == "[4 0 1 2 3 5 6 7]")
+    check(p.inverse == [4, 0, 1, 2, 3, 5, 6, 7])
 
 
   test "compose 0":
     let p = newPerm(@[1, 2, 0])
     let q = newPerm(@[0, 3, 4, 1, 2])
-    check($(p * q) == "[3 4 0 1 2 5 6 7]")
+    check(p * q == [3, 4, 0, 1, 2, 5, 6, 7])
 
   test "compose 1":
     let p = newPerm(@[1, 2, 0])
     let q = newPerm(@[0, 3, 4, 1, 2])
     let i = identity()
-    check($compose(p, i, q) == "[3 4 0 1 2 5 6 7]")
-    check($compose(p, q, i) == "[3 4 0 1 2 5 6 7]")
-    check($compose(@[p, q, i]) == "[3 4 0 1 2 5 6 7]")
+    check(compose(p, i, q) == [3, 4, 0, 1, 2, 5, 6, 7])
+    check(compose(p, q, i) == [3, 4, 0, 1, 2, 5, 6, 7])
+    check(compose(@[p, q, i]) == [3, 4, 0, 1, 2, 5, 6, 7])
 
 
   test "power":
     let p = newPerm(@[1, 2, 3, 4, 5, 0])
-    check($ p.power(2) == "[2 3 4 5 0 1 6 7]")
+    check(p.power(2) == [2, 3, 4, 5, 0, 1, 6, 7])
 
 
   test "conjugate 0":
@@ -73,12 +73,17 @@ suite "basic tests":
   test "conjugate 1":
     let p = newPerm(@[1, 2, 0])
     let q = newPerm(@[0, 3, 4, 1, 2])
-    check($ p.conjugate(q) == "[3 1 2 4 0 5 6 7]")
+    check(p.conjugate(q) == [3, 1, 2, 4, 0, 5, 6, 7])
 
   test "conjugate 2":
     let p = newPerm(@[4, 2, 0, 1, 3])
     let q = newPerm(@[1, 2, 0])
-    check($ p.conjugate(q) == "[1 4 0 2 3 5 6 7]")
+    check(p.conjugate(q) == [1, 4, 0, 2, 3, 5, 6, 7])
+
+  test "conjugate c1":
+    let c = newCycle(@[0, 1, 2, 3])
+    let q = newPerm(@[1, 2, 3, 0])
+    check(c.conjugate(q) == @[1, 2, 3, 0])
 
 
   test "isZero 0":
@@ -233,43 +238,43 @@ suite "basic tests":
 
   test "parseCycles 0":
     let p = parseCycles("")
-    check($ p == "[0 1 2 3 4 5 6 7]")
+    check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "parseCycles 1":
     let p = parseCycles("")
-    check($ p == "[0 1 2 3 4 5 6 7]")
+    check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "parseCycles 2":
     let p = parseCycles("( )( ( )(")
-    check($ p == "[0 1 2 3 4 5 6 7]")
+    check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "parseCycles 3":
     let p = parseCycles("(1)")
-    check($ p == "[0 1 2 3 4 5 6 7]")
+    check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "parseCycles 4":
     let p = parseCycles("(1,2)")
-    check($ p == "[1 0 2 3 4 5 6 7]")
+    check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
   test "parseCycles 5":
     let p = parseCycles("(3,5)")
-    check($ p == "[0 1 4 3 2 5 6 7]")
+    check(p == [0, 1, 4, 3, 2, 5, 6, 7])
 
   test "parseCycles 6":
     let p = parseCycles("(1, 2) (3, 4) ")
-    check($ p == "[1 0 3 2 4 5 6 7]")
+    check(p == [1, 0, 3, 2, 4, 5, 6, 7])
 
   test "parseCycles 7":
     let p = parseCycles("(1 2)(3 8)(7 4)")
-    check($ p == "[1 0 7 6 4 5 3 2]")
+    check(p == [1, 0, 7, 6, 4, 5, 3, 2])
 
   test "parseCycles 8":
     let p = parseCycles("(1 2 ; 3, 8 ; 7 4 )")
-    check($ p == "[1 0 7 6 4 5 3 2]")
+    check(p == [1, 0, 7, 6, 4, 5, 3, 2])
 
   test "parseCycles 9":
     let p = parseCycles("1 2 3 4)(5 6 7 8")
-    check($ p == "[1 2 3 0 5 6 7 4]")
+    check(p == [1, 2, 3, 0, 5, 6, 7, 4])
 
 
   test "printCycles 1":
@@ -282,14 +287,18 @@ suite "basic tests":
 
   test "printCycles 3":
     let p = identity()
+    check(p.cycles[0].len == 0)
     check(p.printCycles == "()")
 
   test "printCycles 4":
     let p = newPerm(@[1, 2, 3, 4, 5, 0])
+    check(p.cycles[0] == @[0, 1, 2, 3, 4, 5])
     check(p.printCycles == "(1, 2, 3, 4, 5, 6)")
 
   test "printCycles 5":
     let p = newPerm(@[1, 2, 0, 4, 5, 3])
+    check(p.cycles[0] == @[0, 1, 2])
+    check(p.cycles[1] == @[3, 4, 5])
     check(p.printCycles == "(1, 2, 3)(4, 5, 6)")
 
   test "printCycles 6":
