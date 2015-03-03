@@ -348,16 +348,14 @@ proc parseCycles*(data: string): Perm =
 
 
 proc cycles*(p: Perm): seq[Cycle] =
-  let size = N
   var cycles = newSeq[seq[P]]()
-  var marks = newSeq[bool](size)
+  var marks: array[N, bool]
   var m = 0
   while true:
     # find next unmarked
-    while m < size and marks[m]:
+    while m < N and marks[m]:
       inc(m)
-
-    if m == size:
+    if m == N:
       break
 
     # construct a cycle
