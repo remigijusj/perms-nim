@@ -1,4 +1,4 @@
-import perm, re, strutils
+import perm, re, strutils, tables
 
 var debug = false
 
@@ -46,7 +46,6 @@ proc sign*(base: PermBase): int =
   return 1
 
 
-# TODO: in-place
 proc normalize*(base: PermBase): PermBase =
   result = base
   for i, item in base:
@@ -83,7 +82,7 @@ iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
         yield (p * it.perm, k)
 
 
-iterator search*(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
+iterator multiSearch(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
   let k = base.len
   var list: seq[Perm] = @[identity()]
   var mult: seq[Perm]
@@ -101,12 +100,22 @@ iterator search*(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
 
 
 proc searchCycle*(base: PermBase; target, levels: int; max = 0): tuple[p: Perm, s: seq[int]] =
-  for p, i, level in base.search(levels):
+  for p, i, level in base.multiSearch(levels):
     if p.orderToCycle(target, max) > -1:
       let s = decompose(i, level, base.len)
       return (p, s)
 
   return (identity(), @[])
+
+
+iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int] =
+  for i, c in list:
+    for j, it in base:
+      yield (conjugate(c, it.perm), i, j)
+
+
+# TODO: use tables
+# iterator conjuSearch(seed: seq[Cycle], base: PermBase): Cycle =
 
 
 when isMainModule:

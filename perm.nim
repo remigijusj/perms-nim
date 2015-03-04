@@ -28,13 +28,22 @@ proc valid(p: Perm): bool =
   return true
 
 
-# TODO: in-place
-proc rotateSeq[T](list: seq[T]): seq[T] =
-  var k: int
-  for i, val in list[1 .. list.high]:
-    if val < list[k]:
-      k = i
-  concat(list[k+1 .. list.high], list[0 .. k])
+proc minIndex[T](list: seq[T]): int =
+  for i, val in list:
+    if val < list[result]:
+      result = i
+
+
+proc rotateSeq[T](list: var seq[T], m: int) =
+  reverse(list, 0, m-1)
+  reverse(list, m, list.high)
+  reverse(list)
+
+
+proc rotateToMin[T](list: var seq[T]) =
+  let m = minIndex(list)
+  if m > 0:
+    rotateSeq(list, m)
 
 
 # ------ constructors ------
@@ -57,7 +66,7 @@ proc newCycle*(data: seq[int]): Cycle =
   for i in 0 .. <data.len:
     result[i] = P(data[i])
 
-  # result = rotateSeq(result)
+  rotateToMin(result)
 
 
 proc identity*: Perm =
@@ -145,9 +154,7 @@ proc `==`*(p: Perm, q: array[N, int]): bool =
   return true
 
 
-proc `==`*(c: Cycle, d: seq[int]): bool =
-  # let e = rotateSeq(d)
-
+proc `==`*[T](c: Cycle, d: seq[T]): bool =
   if c.len != d.len:
     return false
   for i in 0 .. <c.len:
@@ -205,7 +212,7 @@ proc conjugate*(c: Cycle, q: Perm): Cycle =
   for i in 0 .. <c.len:
     result[i] = q[c[i]]
 
-  # result = rotateSeq(result)
+  rotateToMin(result)
 
 
 # ------ signature ------
@@ -310,7 +317,6 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 
 # ------ cycles ------
 
-# TODO: optimize, avoid re?
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
 proc scanCycleRep(data: string): seq[int] =

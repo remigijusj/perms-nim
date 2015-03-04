@@ -109,6 +109,15 @@ suite "basics":
     check(p == q)
     check(q == p)
 
+  test "isEqual c0":
+    let c = newCycle(@[1, 2, 3])
+    let d = newCycle(@[2, 3, 1])
+    check(c == d)
+
+  test "isEqual c1":
+    let c = newCycle(@[3, 1, 2])
+    check(c == @[1, 2, 3])
+
 
 suite "actions":
   test "inverse":
@@ -155,10 +164,25 @@ suite "actions":
     let q = newPerm(@[1, 2, 0])
     check(p.conjugate(q) == [1, 4, 0, 2, 3, 5, 6, 7])
 
-  test "conjugate cycle":
+  test "conjugate c0":
     let c = newCycle(@[0, 1, 2, 3])
-    let q = newPerm(@[1, 2, 3, 0])
-    check(c.conjugate(q) == @[1, 2, 3, 0])
+    let q = newPerm(@[4, 3, 2, 1, 0])
+    check(c.conjugate(q) == @[1, 4, 3, 2])
+
+  test "conjugate c1":
+    let c = newCycle(@[0, 1, 2])
+    let q = newPerm(@[2, 0, 1, 4, 5, 3])
+    check(c.conjugate(q) == c)
+
+  test "conjugate c2":
+    let c = newCycle(@[0, 1, 2])
+    let q = newPerm(@[0, 1, 2, 4, 3])
+    check(c.conjugate(q) == c)
+
+  test "conjugate c2":
+    let c = newCycle(@[0, 4, 7])
+    let q = randomPerm()
+    check(c.conjugate(q).toPerm == c.toPerm.conjugate(q))
 
 
 suite "signature":
