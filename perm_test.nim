@@ -3,8 +3,8 @@ import perm, unittest
 # const N = 8
 # type P = uint8
 
-suite "basic tests":
-  test "constructor":
+suite "constructors":
+  test "direct":
     let p: Perm = [1'u8, 0'u8, 2'u8, 3'u8, 4'u8, 5'u8, 6'u8, 7'u8]
     check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
@@ -30,57 +30,16 @@ suite "basic tests":
     let p = randomPerm()
     check(p.len == 8)
 
+  test "toPerm 0":
+    let c = newCycle(@[1, 2, 3])
+    check(c.toPerm == [0, 2, 3, 1, 4, 5, 6, 7])
 
-  test "inverse":
-    let p = newPerm(@[1, 2, 3, 4, 0])
-    check(p.inverse == [4, 0, 1, 2, 3, 5, 6, 7])
-
-
-  test "compose 0":
-    let p = newPerm(@[1, 2, 0])
-    let q = newPerm(@[0, 3, 4, 1, 2])
-    check(p * q == [3, 4, 0, 1, 2, 5, 6, 7])
-
-  test "compose 1":
-    let p = newPerm(@[1, 2, 0])
-    let q = newPerm(@[0, 3, 4, 1, 2])
-    let i = identity()
-    check(compose(p, i, q) == [3, 4, 0, 1, 2, 5, 6, 7])
-    check(compose(p, q, i) == [3, 4, 0, 1, 2, 5, 6, 7])
-    check(compose(@[p, q, i]) == [3, 4, 0, 1, 2, 5, 6, 7])
+  test "toPerm 1":
+    let c = newCycle(@[3])
+    check(c.toPerm == identity())
 
 
-  test "power":
-    let p = newPerm(@[1, 2, 3, 4, 5, 0])
-    check(p.power(2) == [2, 3, 4, 5, 0, 1, 6, 7])
-
-
-  test "conjugate 0":
-    let p = identity()
-    let q = randomPerm()
-    check(p.conjugate(q).isIdentity == true)
-
-  test "conjugate 0a":
-    let p = randomPerm()
-    let q = identity()
-    check(p.conjugate(q) == p)
-
-  test "conjugate 1":
-    let p = newPerm(@[1, 2, 0])
-    let q = newPerm(@[0, 3, 4, 1, 2])
-    check(p.conjugate(q) == [3, 1, 2, 4, 0, 5, 6, 7])
-
-  test "conjugate 2":
-    let p = newPerm(@[4, 2, 0, 1, 3])
-    let q = newPerm(@[1, 2, 0])
-    check(p.conjugate(q) == [1, 4, 0, 2, 3, 5, 6, 7])
-
-  test "conjugate c1":
-    let c = newCycle(@[0, 1, 2, 3])
-    let q = newPerm(@[1, 2, 3, 0])
-    check(c.conjugate(q) == @[1, 2, 3, 0])
-
-
+suite "basics":
   test "isZero 0":
     let p = newPerm(@[])
     check(p.isZero == false)
@@ -90,7 +49,7 @@ suite "basic tests":
     check(p.isZero == false)
 
   test "isZero 2":
-    let p: Perm = [0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8, 0'u8]
+    var p: Perm # = [0, 0, 0, 0, 0, 0, 0, 0]
     check(p.isZero == true)
 
 
@@ -151,6 +110,58 @@ suite "basic tests":
     check(q == p)
 
 
+suite "actions":
+  test "inverse":
+    let p = newPerm(@[1, 2, 3, 4, 0])
+    check(p.inverse == [4, 0, 1, 2, 3, 5, 6, 7])
+
+
+  test "compose 0":
+    let p = newPerm(@[1, 2, 0])
+    let q = newPerm(@[0, 3, 4, 1, 2])
+    check(p * q == [3, 4, 0, 1, 2, 5, 6, 7])
+
+  test "compose 1":
+    let p = newPerm(@[1, 2, 0])
+    let q = newPerm(@[0, 3, 4, 1, 2])
+    let i = identity()
+    check(compose(p, i, q) == [3, 4, 0, 1, 2, 5, 6, 7])
+    check(compose(p, q, i) == [3, 4, 0, 1, 2, 5, 6, 7])
+    check(compose(@[p, q, i]) == [3, 4, 0, 1, 2, 5, 6, 7])
+
+
+  test "power":
+    let p = newPerm(@[1, 2, 3, 4, 5, 0])
+    check(p.power(2) == [2, 3, 4, 5, 0, 1, 6, 7])
+
+
+  test "conjugate 0":
+    let p = identity()
+    let q = randomPerm()
+    check(p.conjugate(q).isIdentity == true)
+
+  test "conjugate 0a":
+    let p = randomPerm()
+    let q = identity()
+    check(p.conjugate(q) == p)
+
+  test "conjugate 1":
+    let p = newPerm(@[1, 2, 0])
+    let q = newPerm(@[0, 3, 4, 1, 2])
+    check(p.conjugate(q) == [3, 1, 2, 4, 0, 5, 6, 7])
+
+  test "conjugate 2":
+    let p = newPerm(@[4, 2, 0, 1, 3])
+    let q = newPerm(@[1, 2, 0])
+    check(p.conjugate(q) == [1, 4, 0, 2, 3, 5, 6, 7])
+
+  test "conjugate cycle":
+    let c = newCycle(@[0, 1, 2, 3])
+    let q = newPerm(@[1, 2, 3, 0])
+    check(c.conjugate(q) == @[1, 2, 3, 0])
+
+
+suite "signature":
   test "signature 0":
     let p = newPerm(@[])
     check(p.signature == [0, 8, 0, 0, 0, 0, 0, 0, 0])
@@ -218,6 +229,7 @@ suite "basic tests":
     check(p.orderToCycle(4) == -1)
 
 
+suite "cycles":
   test "parseCycles invalid 0":
     expect PermError:
       discard parseCycles("(1 2 3 0)")

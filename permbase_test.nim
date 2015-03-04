@@ -3,7 +3,7 @@ import perm, permbase, unittest
 suite "permbase":
   test "basic":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = data.parseBase
+    let base = parseBase(data)
     check(base.sign == -1)
     check(base.len == 2)
     check(base.printBase == data)
@@ -17,7 +17,7 @@ suite "permbase":
 
   test "normalize 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = data.parseBase.normalize
+    let base = parseBase(data).normalize
     check(base.sign == -1)
     check(base.len == 3)
     check(base[2].name == "A'")
@@ -25,14 +25,14 @@ suite "permbase":
 
   test "normalize 1":
     let data = "A: (1, 2)\nB: (3, 4)"
-    let base = data.parseBase.normalize
+    let base = parseBase(data).normalize
     check(base.len == 2)
     check(base[0].inverse == 0)
     check(base[1].inverse == 1)
 
   test "multiply":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = data.parseBase
+    let base = parseBase(data)
     var list = newSeq[Perm](4)
     for perm, i in base.toSeq.multiply(base):
       list[i] = perm
@@ -41,8 +41,9 @@ suite "permbase":
     check(list[2].printCycles == "(1, 2, 3, 4)")
     check(list[3].printCycles == "()")
 
-  test "search 0":
-    let base = parseBase("A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)")
+  test "searchCycle 0":
+    let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
+    let base = parseBase(data)
     let norm = base.normalize
     let (p, s) = norm.searchCycle(3, 8)
     check(p == norm.composeSeq(s))
@@ -50,8 +51,9 @@ suite "permbase":
     let o = p.orderToCycle(3)
     check(o == 5)
 
-  test "search 1":
-    let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+  test "searchCycle 1":
+    let data = "A: (1 2)(3 4)\nB: (1 3)(2 4)"
+    let base = parseBase(data)
     let (p, s) = base.searchCycle(3, 4)
     check(p.isIdentity == true)
     check(s.len == 0)

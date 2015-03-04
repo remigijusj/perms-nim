@@ -15,8 +15,7 @@ type Signature* = array[N+1, int]
 type PermError* = object of Exception
 
 
-# ------ basics ------
-
+# ------ helpers ------
 
 proc valid(p: Perm): bool =
   var check = p
@@ -37,6 +36,8 @@ proc rotateSeq[T](list: seq[T]): seq[T] =
       k = i
   concat(list[k+1 .. list.high], list[0 .. k])
 
+
+# ------ constructors ------
 
 proc newPerm*(data: seq[int]): Perm =
   if data.len > N:
@@ -69,6 +70,45 @@ proc randomPerm*: Perm =
   for i in countdown(result.high, 0):
     let j = random(i + 1)
     swap(result[i], result[j])
+
+
+proc toPerm*(c: Cycle): Perm =
+  result = identity()
+  if c.len < 2:
+    return
+
+  var point = c[0]
+  for i in 1 .. <c.len:
+    result[point] = c[i]
+    point = c[i]
+  result[point] = c[0]
+
+
+# ------ basics ------
+
+proc isZero*(p: Perm): bool =
+  for i, v in p:
+    if int(v) != 0:
+      return false
+
+  return true
+
+
+proc isIdentity*(p: Perm): bool =
+  for i, v in p:
+    if int(v) != i:
+      return false
+
+  return true
+
+
+# optimized p.inverse == p
+proc isInvolution*(p: Perm): bool = 
+  for i in 0 .. <N:
+    if p[p[i]] != P(i):
+      return false
+
+  return true
 
 
 #proc `[]`(p: Perm, x: P): P = p[int(x)]
@@ -117,6 +157,8 @@ proc `==`*(c: Cycle, d: seq[int]): bool =
   return true
 
 
+# ------ actions ------
+
 proc inverse*(p: Perm): Perm =
   for i in 0 .. <N:
     result[p[i]] = P(i)
@@ -164,31 +206,6 @@ proc conjugate*(c: Cycle, q: Perm): Cycle =
     result[i] = q[c[i]]
 
   # result = rotateSeq(result)
-
-
-proc isZero*(p: Perm): bool =
-  for i, v in p:
-    if int(v) != 0:
-      return false
-
-  return true
-
-
-proc isIdentity*(p: Perm): bool =
-  for i, v in p:
-    if int(v) != i:
-      return false
-
-  return true
-
-
-# optimized p.inverse == p
-proc isInvolution*(p: Perm): bool = 
-  for i in 0 .. <N:
-    if p[p[i]] != P(i):
-      return false
-
-  return true
 
 
 # ------ signature ------
@@ -250,7 +267,6 @@ proc signFrom(sgn: Signature): int {.noSideEffect.} =
     return -1
 
 
-# TODO: binary reduce, multi-lcm algorithm
 proc orderFrom(sgn: Signature, max = 0): int {.noSideEffect.} =
   result = 1
   for i, v in sgn:
@@ -297,9 +313,8 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 # TODO: optimize, avoid re?
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
-proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
-  var parts = newSeq[int]()
-  var max = -1
+proc scanCycleRep(data: string): seq[int] =
+  result = newSeq[int]()
   for item in data.findAll(re"\d+|[();]+"):
     var part: int
     try:
@@ -314,26 +329,21 @@ proc scanCycleRep(data: string): tuple[parts: seq[int], max: int] =
     elif part > 0:
       dec(part)
 
-    parts.add(part)
-    if part > max:
-      max = part
+    result.add(part)
 
   # must end in -1
-  if parts.len == 0 or parts[parts.len-1] != -1:
-    parts.add(-1)
-
-  result.parts = parts
-  result.max = max
+  if result.len == 0 or result[result.len-1] != -1:
+    result.add(-1)
 
 
 # build permutation
 # ex: []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1} -> []Pt{1, 0, 7, 6, 4, 5, 3, 2}
-proc buildPermFromCycleRep(rep: tuple[parts: seq[int], max: int]): Perm =
+proc buildPermFromCycleRep(parts: seq[int]): Perm =
   var perm = identity()
 
   var first = -1
   var point = -1
-  for part in rep.parts:
+  for part in parts:
     if part == -1:
       if first >= 0 and point >= 0:
         if int(perm[point]) != point:
