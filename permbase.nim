@@ -151,7 +151,7 @@ proc traceBack(meta: seq[tuple[i, j: int]]): seq[int] =
   reverse(result)
 
 
-proc coverCycles(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
+proc coverCycles*(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
   result = newSeq[seq[int]](target.len)
   var cnt = 0
   for c, meta in base.conjuSearch(seed):
@@ -172,5 +172,4 @@ when isMainModule:
   let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
   let seed = @[newCycle(@[1, 3])]
   let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
-  let covers = base.coverCycles(seed, target)
-  echo covers
+  discard base.coverCycles(seed, target)
