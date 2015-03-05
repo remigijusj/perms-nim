@@ -415,3 +415,41 @@ proc printCycles*(p: Perm): string =
         result.add ", "
       result.add($(e+1))
     result.add ")"
+
+
+# canonical star decomposition
+proc splitCycles2*(p: Perm): seq[Cycle] =
+  result = newSeq[Cycle]()
+  for c in p.cycles:
+    for j in 1 .. c.high:
+      result.add Cycle(@[c[0], c[j]])
+
+
+# certain 3-cycles decomposition
+proc splitCycles3*(p: Perm): seq[Cycle] =
+  result = newSeq[Cycle]()
+  # odd cycles
+  for c in p.cycles:
+    if c.len mod 2 == 0:
+      continue
+    for j in countup(1, c.high-1, 2):
+      result.add Cycle(@[c[0], c[j], c[j+1]])
+
+  # even cycles
+  var r: Cycle
+  for c in p.cycles:
+    if c.len mod 2 == 1:
+      continue
+    if r.isNil():
+      for j in countup(1, c.high-1, 2):
+        result.add Cycle(@[c[0], c[j], c[j+1]])
+      r = Cycle(@[c[0], c[c.high]])
+    else:
+      result.add Cycle(@[r[0], r[1], c[0]])
+      result.add Cycle(@[r[0], c[1], c[0]])
+      for j in countup(2, c.high-1, 2):
+        result.add Cycle(@[c[0], c[j], c[j+1]])
+      r = nil
+
+  if not r.isNil():
+    raise PermError.newException("no split for odd perm")
