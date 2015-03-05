@@ -1,4 +1,4 @@
-import algorithm, perm, re, strutils, tables
+import algorithm, perm, re, strutils
 
 var debug = false
 
@@ -151,12 +151,17 @@ proc traceBack(meta: seq[tuple[i, j: int]]): seq[int] =
   reverse(result)
 
 
-# TODO: WIP, use tables
-proc coverCycles(base: PermBase; seed, target: seq[Cycle]): bool =
+proc coverCycles(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
+  result = newSeq[seq[int]](target.len)
+  var cnt = 0
   for c, meta in base.conjuSearch(seed):
-    let t = traceBack(meta)
-    let m = meta[meta.high]
-    if debug: echo(cnt, ": ", c, " <- ", m.i, ":", m.j, " <- ", t)
+    if debug: echo(c, " <- ", meta[meta.high].i, ":", meta[meta.high].j)
+    let i = target.find(c)
+    if i >= 0:
+      result[i] = meta.traceBack
+      cnt.inc
+      if cnt >= target.len:
+        return
 
 
 when isMainModule:
@@ -166,5 +171,6 @@ when isMainModule:
   echo "---------"
   let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
   let seed = @[newCycle(@[1, 3])]
-  let target = newSeq[Cycle]()
-  discard base.coverCycles(seed, target)
+  let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
+  let covers = base.coverCycles(seed, target)
+  echo covers
