@@ -1,4 +1,4 @@
-import perm, re, strutils, tables
+import algorithm, perm, re, strutils, tables
 
 var debug = false
 
@@ -114,45 +114,57 @@ iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int
       yield (conjugate(c, it.perm), i, j)
 
 
-# TODO: web history
-iterator conjuSearch(base: PermBase, seed: seq[Cycle]): tuple[c: Cycle, level: int] =
-  var list = newSeq[seq[Cycle]]()
-  var prev, next: seq[Cycle]
-  var level = 0
+iterator conjuSearch(base: PermBase, seed: seq[Cycle]): tuple[c: Cycle, meta: seq[tuple[i, j: int]]] =
+  var list = newSeq[Cycle]()
+  var meta = newSeq[tuple[i, j: int]]()
+  var prev, next: int
 
   for i, c in seed:
-    yield (c, level)
-  prev = seed
+    let m = (-1, -1)
+    list.add(c)
+    meta.add(m)
+    yield (c, meta)
 
   while true:
-    if prev.len == 0:
+    if prev == list.len:
       break
-    list.add(prev)
-    level.inc
-    next = newSeq[Cycle]()
+    next = list.len
 
-    for c, i, j in prev.conjugate(base):
-      # TODO: if in list, continue
-      yield (c, level)
-      next.add(c)
+    for c, i, j in list[prev .. list.high].conjugate(base):
+      if list.contains(c):
+        continue
+      let m = (prev+i, j)
+      list.add(c)
+      meta.add(m)
+      yield (c, meta)
+
     prev = next
+
+
+proc traceBack(meta: seq[tuple[i, j: int]]): seq[int] =
+  result = newSeq[int]()
+  var i = meta.high
+  while i > 0:
+    result.add(meta[i].j)
+    i = meta[i].i
+  result.add(i)
+  reverse(result)
 
 
 # TODO: WIP, use tables
 proc coverCycles(base: PermBase; seed, target: seq[Cycle]): bool =
-  var cnt = 0
-  for c, level in base.conjuSearch(seed):
-    if debug: echo cnt, ", ", level, ": ", c
-    cnt.inc
-    if cnt >= 30:
-      return false
+  for c, meta in base.conjuSearch(seed):
+    let t = traceBack(meta)
+    let m = meta[meta.high]
+    if debug: echo(cnt, ": ", c, " <- ", m.i, ":", m.j, " <- ", t)
 
 
 when isMainModule:
   debug = true
-  let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
-  discard base.searchCycle(4, 2)
+  let norm = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+  discard norm.searchCycle(4, 2)
   echo "---------"
+  let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
   let seed = @[newCycle(@[1, 3])]
   let target = newSeq[Cycle]()
   discard base.coverCycles(seed, target)
