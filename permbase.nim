@@ -32,7 +32,7 @@ proc randomBase*(size: int): PermBase =
     result[i] = (name, randomPerm(), -1)
 
 
-proc toSeq*(base: PermBase): seq[Perm] =
+proc perms*(base: PermBase): seq[Perm] =
   result = newSeq[Perm](base.len)
   for i, item in base:
     result[i] = item.perm
@@ -99,13 +99,20 @@ iterator multiSearch(base: PermBase, levels: int): tuple[p: Perm; i, level: int]
     swap(list, mult)
 
 
-proc searchCycle*(base: PermBase; target, levels: int; max = 0): tuple[p: Perm, s: seq[int]] =
+proc searchCycle*(base: PermBase; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle], s: seq[seq[int]]] =
+  result.c = newSeq[Cycle]()
+  result.s = newSeq[seq[int]]()
   for p, i, level in base.multiSearch(levels):
-    if p.orderToCycle(target, max) > -1:
-      let s = decompose(i, level, base.len)
-      return (p, s)
-
-  return (identity(), @[])
+    let o = p.orderToCycle(target, max)
+    if o > -1:
+      let c = p.power(o).cycles[0]
+      if not result.c.contains(c):
+        var s = decompose(i, level, base.len)
+        s.add(o) # push residual order on top
+        result.c.add(c)
+        result.s.add(s)
+        if not full:
+          return
 
 
 iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int] =
@@ -114,6 +121,7 @@ iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int
       yield (conjugate(c, it.perm), i, j)
 
 
+# ensures unique yielded cycles
 iterator conjuSearch(base: PermBase, seed: seq[Cycle]): tuple[c: Cycle, meta: seq[tuple[i, j: int]]] =
   var list = newSeq[Cycle]()
   var meta = newSeq[tuple[i, j: int]]()
@@ -162,6 +170,9 @@ proc coverCycles*(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
       cnt.inc
       if cnt >= target.len:
         return
+
+  if cnt < target.len:
+    raise Exception.newException("failed to cover all targets")
 
 
 when isMainModule:

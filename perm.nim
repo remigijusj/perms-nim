@@ -406,16 +406,20 @@ proc cycles*(p: Perm): seq[Cycle] =
   return cycles
 
 
+proc printCycle*(c: Cycle): string =
+  result = ""
+  result.add "("
+  for i, e in c:
+    if i > 0:
+      result.add ", "
+    result.add($(e+1))
+  result.add ")"
+
+
 proc printCycles*(p: Perm): string =
   result = ""
-  for cycle in p.cycles:
-    result.add "("
-    for i, e in cycle:
-      if i > 0:
-        result.add ", "
-      result.add($(e+1))
-    result.add ")"
-
+  for c in p.cycles:
+    result.add printCycle(c)
 
 # canonical star decomposition
 proc splitCycles2*(p: Perm): seq[Cycle] =

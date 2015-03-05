@@ -1,4 +1,4 @@
-import perm, permbase, unittest
+import sequtils, perm, permbase, unittest
 
 suite "permbase":
   test "basics":
@@ -15,10 +15,10 @@ suite "permbase":
     check(base[1].name == "B")
     check(base[2].name == "C")
 
-  test "toSeq":
+  test "perms":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = parseBase(data)
-    check(base.toSeq() == @[parseCycles("(1, 2, 3)"), parseCycles("(3, 4)")])
+    check(base.perms == @[parseCycles("(1, 2, 3)"), parseCycles("(3, 4)")])
 
   test "sign 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
@@ -74,7 +74,7 @@ suite "stage 1":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = parseBase(data)
     var list = newSeq[Perm](4)
-    for perm, i in base.toSeq.multiply(base):
+    for perm, i in base.perms.multiply(base):
       list[i] = perm
     check(list[0].printCycles == "(1, 3, 2)")
     check(list[1].printCycles == "(1, 2, 4, 3)")
@@ -85,23 +85,30 @@ suite "stage 1":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
     let base = parseBase(data)
     let norm = base.normalize
-    let (p, s) = norm.searchCycle(3, 8)
-    check(p == norm.composeSeq(s))
-    check(s == @[0, 1, 1])
-    let o = p.orderToCycle(3)
-    check(o == 5)
-    let c = p.power(5).cycles()[0]
-    check(c == newCycle(@[1, 3, 6]))
+    let (list, meta) = norm.searchCycle(3, 8)
+    check(list.len == 1)
+    check(meta.len == 1)
+    check(list[0] == newCycle(@[1, 3, 6]))
+    check(meta[0] == @[0, 1, 1, 5]) # 5 is order
 
   test "searchCycle 1":
+    let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
+    let base = parseBase(data)
+    let norm = base.normalize
+    let (list, meta) = norm.searchCycle(3, 4, 8, true)
+    check(list.len == 10)
+    check(meta.len == 10)
+    check(list[9] == newCycle(@[0, 6, 3]))
+    check(meta[9] == @[2, 2, 0, 2, 5]) # 5 is order
+    let reps = list.mapIt(string, $it)
+    check(reps.deduplicate.len == 10)
+
+  test "searchCycle 2":
     let data = "A: (1 2)(3 4)\nB: (1 3)(2 4)"
     let base = parseBase(data)
-    let (p, s) = base.searchCycle(3, 4)
-    check(p == base.composeSeq(s))
-    check(p.isIdentity == true)
-    check(s.len == 0)
-    let o = p.orderToCycle(3)
-    check(o == -1)
+    let (list, meta) = base.searchCycle(3, 4)
+    check(list.len == 0)
+    check(meta.len == 0)
 
 
 suite "stage 2":
@@ -137,3 +144,11 @@ suite "stage 2":
     let target = @[newCycle(@[2, 4, 6]), newCycle(@[5, 3, 1])]
     let covers = norm.coverCycles(seed, target)
     check(covers == @[@[0, 1], @[0, 1, 0]])
+
+  test "coverCycles 2":
+    let data = "A: (1 2)(3 4)\nB: (1 3)(2 4)"
+    let base = parseBase(data)
+    let seed = @[newCycle(@[0, 2])]
+    let target = @[newCycle(@[1, 3]), newCycle(@[1, 2])]
+    expect Exception:
+      discard base.coverCycles(seed, target)
