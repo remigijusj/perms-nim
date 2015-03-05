@@ -88,8 +88,8 @@ iterator multiSearch(base: PermBase, levels: int): tuple[p: Perm; i, level: int]
   var mult: seq[Perm]
 
   for level in 1 .. levels:
-    mult = newSeq[Perm](list.len * k)
     if debug: echo "--- ", level
+    mult = newSeq[Perm](list.len * k)
     for p, i in list.multiply(base):
       if p.isZero or p.isIdentity:
         continue
@@ -114,11 +114,45 @@ iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int
       yield (conjugate(c, it.perm), i, j)
 
 
-# TODO: use tables
-# iterator conjuSearch(seed: seq[Cycle], base: PermBase): Cycle =
+# TODO: web history
+iterator conjuSearch(base: PermBase, seed: seq[Cycle]): tuple[c: Cycle, level: int] =
+  var list = newSeq[seq[Cycle]]()
+  var prev, next: seq[Cycle]
+  var level = 0
+
+  for i, c in seed:
+    yield (c, level)
+  prev = seed
+
+  while true:
+    if prev.len == 0:
+      break
+    list.add(prev)
+    level.inc
+    next = newSeq[Cycle]()
+
+    for c, i, j in prev.conjugate(base):
+      # TODO: if in list, continue
+      yield (c, level)
+      next.add(c)
+    prev = next
+
+
+# TODO: WIP, use tables
+proc coverCycles(base: PermBase; seed, target: seq[Cycle]): bool =
+  var cnt = 0
+  for c, level in base.conjuSearch(seed):
+    if debug: echo cnt, ", ", level, ": ", c
+    cnt.inc
+    if cnt >= 30:
+      return false
 
 
 when isMainModule:
   debug = true
   let base = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
   discard base.searchCycle(4, 2)
+  echo "---------"
+  let seed = @[newCycle(@[1, 3])]
+  let target = newSeq[Cycle]()
+  discard base.coverCycles(seed, target)
