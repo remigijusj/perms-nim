@@ -62,6 +62,14 @@ proc composeSeq*(base: PermBase, list: seq[int]): Perm =
     result = result * base[i].perm
 
 
+proc factorNames*(base: PermBase, list: seq[int], sep = ""): string =
+  result = ""
+  for i, it in list:
+    if i > 0:
+      result.add(sep)
+    result.add(base[it].name)
+
+
 proc decompose(i, level, k: int): seq[int] =
   var val = i
   result = newSeq[int](level)
@@ -180,36 +188,40 @@ proc nextPowerOver(k, size: int): int = ceil(ln(size.float) / ln(k.float)).int
 
 proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
   result = newSeq[int]()
-  echo "meta: ", meta, "\ncovers: ", covers
-  # TODO <<<
+  for cov in covers:
+    for k in countdown(cov.high, 1):
+      result.add(base[cov[k]].inverse)
+
+    let root = meta[cov[0]]
+    let times = root[root.high]
+    for i in 1 .. times:
+      for j in 0 .. <root.high:
+        result.add(root[j])
+
+    for k in countup(1, cov.high):
+      result.add(cov[k])
 
 
 proc factorize*(base: PermBase, target: Perm, full = false): seq[int] =
   let sign = base.sign
-  let norm = base.normalize
   # stage 1
   let length = (5 + sign) div 2 # 2 or 3
-  let levels = nextPowerOver(norm.len, N*N)
-  let (seed, meta) = norm.searchCycle(length, levels, N, full)
+  let levels = nextPowerOver(base.len, N*N)
+  let (seed, meta) = base.searchCycle(length, levels, N, full)
   # stage 2
   let cycles = target.splitCycles(length)
-  let covers = norm.coverCycles(seed, cycles)
+  let covers = base.coverCycles(seed, cycles)
   # finalize
-  result = calcFactors(norm, meta, covers)
+  result = calcFactors(base, meta, covers)
 
 
 when isMainModule:
   # C2 x C2
-  let norm = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
-  discard norm.searchCycle(4, 2)
+  let invo = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+  discard invo.searchCycle(4, 2)
   echo "---------"
   # (C3 x C3) : C4
   let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
   let seed = @[newCycle(@[1, 3])]
   let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
   discard base.coverCycles(seed, target)
-  echo "---------"
-  debug = false
-  let this = parsePerm("(1 3 5)(2 4 6)")
-  discard base.factorize(this)
-  discard base.factorize(this, true)

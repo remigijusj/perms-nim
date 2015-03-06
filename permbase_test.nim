@@ -68,6 +68,15 @@ suite "permbase":
     check(base.composeSeq(@[0, 1, 0]) == [0, 1, 2, 7, 3, 4, 5, 6])
     check(base.composeSeq(@[1, 0, 1]) == [6, 5, 0, 4, 7, 3, 2, 1])
 
+  test "factorNames":
+    let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
+    let base = parseBase(data).normalize
+    check(base.factorNames(newSeq[int]()) == "")
+    check(base.factorNames(@[0]) == "A")
+    check(base.factorNames(@[1]) == "B")
+    check(base.factorNames(@[0, 1, 2]) == "ABB'")
+    check(base.factorNames(@[1, 0, 1], ",") == "B,A,B")
+
 
 suite "stage 1":
   test "multiply":
@@ -152,3 +161,18 @@ suite "stage 2":
     let target = @[newCycle(@[1, 3]), newCycle(@[1, 2])]
     expect PermError:
       discard base.coverCycles(seed, target)
+
+suite "final":
+  test "factorize 0":
+    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)").normalize
+    let perm = parsePerm("(1 3 5)(2 4 6)")
+    let list = base.factorize(perm)
+    check(base.composeSeq(list) == perm)
+    check(base.factorNames(list) == "BA'BA")
+
+  test "factorize 0a":
+    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)").normalize
+    let perm = parsePerm("(1 3 5)(2 4 6)")
+    let list = base.factorize(perm, true)
+    check(base.composeSeq(list) == perm)
+    check(base.factorNames(list) == "BAB'A'")
