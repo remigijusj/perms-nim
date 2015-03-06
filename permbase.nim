@@ -1,6 +1,6 @@
-import algorithm, perm, re, strutils
+import algorithm, math, perm, re, strutils
 
-var debug = false
+var debug = isMainModule
 
 type BaseItem = tuple
   name: string
@@ -152,7 +152,7 @@ iterator conjuSearch(base: PermBase, seed: seq[Cycle]): tuple[c: Cycle, meta: se
 proc traceBack(meta: seq[tuple[i, j: int]]): seq[int] =
   result = newSeq[int]()
   var i = meta.high
-  while i > 0:
+  while meta[i].i >= 0:
     result.add(meta[i].j)
     i = meta[i].i
   result.add(i)
@@ -172,15 +172,44 @@ proc coverCycles*(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
         return
 
   if cnt < target.len:
-    raise Exception.newException("failed to cover all targets")
+    raise PermError.newException("failed to cover all targets")
+
+
+proc nextPowerOver(k, size: int): int = ceil(ln(size.float) / ln(k.float)).int
+
+
+proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
+  result = newSeq[int]()
+  echo "meta: ", meta, "\ncovers: ", covers
+  # TODO <<<
+
+
+proc factorize*(base: PermBase, target: Perm, full = false): seq[int] =
+  let sign = base.sign
+  let norm = base.normalize
+  # stage 1
+  let length = (5 + sign) div 2 # 2 or 3
+  let levels = nextPowerOver(norm.len, N*N)
+  let (seed, meta) = norm.searchCycle(length, levels, N, full)
+  # stage 2
+  let cycles = target.splitCycles(length)
+  let covers = norm.coverCycles(seed, cycles)
+  # finalize
+  result = calcFactors(norm, meta, covers)
 
 
 when isMainModule:
-  debug = true
+  # C2 x C2
   let norm = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
   discard norm.searchCycle(4, 2)
   echo "---------"
+  # (C3 x C3) : C4
   let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
   let seed = @[newCycle(@[1, 3])]
   let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
   discard base.coverCycles(seed, target)
+  echo "---------"
+  debug = false
+  let this = parsePerm("(1 3 5)(2 4 6)")
+  discard base.factorize(this)
+  discard base.factorize(this, true)

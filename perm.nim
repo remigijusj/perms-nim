@@ -422,7 +422,7 @@ proc printCycles*(p: Perm): string =
     result.add printCycle(c)
 
 # canonical star decomposition
-proc splitCycles2*(p: Perm): seq[Cycle] =
+proc splitCycles2(p: Perm): seq[Cycle] =
   result = newSeq[Cycle]()
   for c in p.cycles:
     for j in 1 .. c.high:
@@ -430,7 +430,7 @@ proc splitCycles2*(p: Perm): seq[Cycle] =
 
 
 # certain 3-cycles decomposition
-proc splitCycles3*(p: Perm): seq[Cycle] =
+proc splitCycles3(p: Perm): seq[Cycle] =
   result = newSeq[Cycle]()
   # odd cycles
   for c in p.cycles:
@@ -457,3 +457,13 @@ proc splitCycles3*(p: Perm): seq[Cycle] =
 
   if not r.isNil():
     raise PermError.newException("no split for odd perm")
+
+
+# proxy wrapper
+proc splitCycles*(p: Perm, length: int): seq[Cycle] =
+  if length == 2:
+    return splitCycles2(p)
+  elif length == 3:
+    return splitCycles3(p)
+  else:
+    raise PermError.newException("unsupported split length")

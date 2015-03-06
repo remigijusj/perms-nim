@@ -344,43 +344,43 @@ suite "cycles":
   test "splitCycles2 0":
     let p = newPerm(@[1, 2, 3, 4, 5, 0])
     let s = @[@[0, 1], @[0, 2], @[0, 3], @[0, 4], @[0, 5]]
-    for i, c in p.splitCycles2:
+    for i, c in p.splitCycles(2):
       check(c == s[i])
 
   test "splitCycles2 1":
     let p = parsePerm("(1 2)(3 8)(7 4)")
     let s = @[@[0, 1], @[2, 7], @[3, 6]]
-    for i, c in p.splitCycles2:
+    for i, c in p.splitCycles(2):
       check(c == s[i])
 
   test "splitCycles2 2":
     let p = newPerm(@[1, 2, 0, 4, 5, 3])
     let s = @[@[0, 1], @[0, 2], @[3, 4], @[3, 5]]
-    for i, c in p.splitCycles2:
+    for i, c in p.splitCycles(2):
       check(c == s[i])
 
   test "splitCycles3 0":
     let p = newPerm(@[1, 2, 0, 4, 5, 3])
     let s = @[@[0, 1, 2], @[3, 4, 5]]
-    for i, c in p.splitCycles3:
+    for i, c in p.splitCycles(3):
       check(c == s[i])
 
   test "splitCycles3 1":
     let p = parsePerm("(1 2 4 8)(3 5)")
     let s = @[@[0, 1, 3], @[0, 7, 2], @[0, 4, 2]]
-    for i, c in p.splitCycles3:
+    for i, c in p.splitCycles(3):
       check(c == s[i])
 
   test "splitCycles3 2":
     let p = parsePerm("(1 7)(3 2 6)(5 8)") # [0 6][1 5 2][4 7]
     let s = @[@[1, 5, 2], @[0, 6, 4], @[0, 7, 4]]
-    for i, c in p.splitCycles3:
+    for i, c in p.splitCycles(3):
       check(c == s[i])
 
   test "splitCycles3 3":
     expect PermError:
       let p = parsePerm("(1 2)(3 8)(7 4)")
-      discard p.splitCycles3
+      discard p.splitCycles(3)
     expect PermError:
       let q = parsePerm("(8 1)")
-      discard q.splitCycles3
+      discard q.splitCycles(3)

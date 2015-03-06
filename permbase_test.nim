@@ -150,5 +150,5 @@ suite "stage 2":
     let base = parseBase(data)
     let seed = @[newCycle(@[0, 2])]
     let target = @[newCycle(@[1, 3]), newCycle(@[1, 2])]
-    expect Exception:
+    expect PermError:
       discard base.coverCycles(seed, target)
