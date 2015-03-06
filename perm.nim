@@ -372,7 +372,7 @@ proc buildPermFromCycleRep(parts: seq[int]): Perm =
   return perm
 
 
-proc parseCycles*(data: string): Perm =
+proc parsePerm*(data: string): Perm =
   buildPermFromCycleRep(scanCycleRep(data))
 
 

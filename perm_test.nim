@@ -254,57 +254,57 @@ suite "signature":
 
 
 suite "cycles":
-  test "parseCycles invalid 0":
+  test "parsePerm invalid 0":
     expect PermError:
-      discard parseCycles("(1 2 3 0)")
+      discard parsePerm("(1 2 3 0)")
 
-  test "parseCycles invalid 1":
+  test "parsePerm invalid 1":
     expect PermError:
-      discard parseCycles("(1 2)(2, 3)")
+      discard parsePerm("(1 2)(2, 3)")
 
-  test "parseCycles invalid 2":
+  test "parsePerm invalid 2":
     expect PermError:
-      discard parseCycles("(1, 2, 65537)")
+      discard parsePerm("(1, 2, 65537)")
 
 
-  test "parseCycles 0":
-    let p = parseCycles("")
+  test "parsePerm 0":
+    let p = parsePerm("")
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
-  test "parseCycles 1":
-    let p = parseCycles("")
+  test "parsePerm 1":
+    let p = parsePerm("")
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
-  test "parseCycles 2":
-    let p = parseCycles("( )( ( )(")
+  test "parsePerm 2":
+    let p = parsePerm("( )( ( )(")
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
-  test "parseCycles 3":
-    let p = parseCycles("(1)")
+  test "parsePerm 3":
+    let p = parsePerm("(1)")
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
-  test "parseCycles 4":
-    let p = parseCycles("(1,2)")
+  test "parsePerm 4":
+    let p = parsePerm("(1,2)")
     check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
-  test "parseCycles 5":
-    let p = parseCycles("(3,5)")
+  test "parsePerm 5":
+    let p = parsePerm("(3,5)")
     check(p == [0, 1, 4, 3, 2, 5, 6, 7])
 
-  test "parseCycles 6":
-    let p = parseCycles("(1, 2) (3, 4) ")
+  test "parsePerm 6":
+    let p = parsePerm("(1, 2) (3, 4) ")
     check(p == [1, 0, 3, 2, 4, 5, 6, 7])
 
-  test "parseCycles 7":
-    let p = parseCycles("(1 2)(3 8)(7 4)")
+  test "parsePerm 7":
+    let p = parsePerm("(1 2)(3 8)(7 4)")
     check(p == [1, 0, 7, 6, 4, 5, 3, 2])
 
-  test "parseCycles 8":
-    let p = parseCycles("(1 2 ; 3, 8 ; 7 4 )")
+  test "parsePerm 8":
+    let p = parsePerm("(1 2 ; 3, 8 ; 7 4 )")
     check(p == [1, 0, 7, 6, 4, 5, 3, 2])
 
-  test "parseCycles 9":
-    let p = parseCycles("1 2 3 4)(5 6 7 8")
+  test "parsePerm 9":
+    let p = parsePerm("1 2 3 4)(5 6 7 8")
     check(p == [1, 2, 3, 0, 5, 6, 7, 4])
 
 
@@ -348,7 +348,7 @@ suite "cycles":
       check(c == s[i])
 
   test "splitCycles2 1":
-    let p = parseCycles("(1 2)(3 8)(7 4)")
+    let p = parsePerm("(1 2)(3 8)(7 4)")
     let s = @[@[0, 1], @[2, 7], @[3, 6]]
     for i, c in p.splitCycles2:
       check(c == s[i])
@@ -366,21 +366,21 @@ suite "cycles":
       check(c == s[i])
 
   test "splitCycles3 1":
-    let p = parseCycles("(1 2 4 8)(3 5)")
+    let p = parsePerm("(1 2 4 8)(3 5)")
     let s = @[@[0, 1, 3], @[0, 7, 2], @[0, 4, 2]]
     for i, c in p.splitCycles3:
       check(c == s[i])
 
   test "splitCycles3 2":
-    let p = parseCycles("(1 7)(3 2 6)(5 8)") # [0 6][1 5 2][4 7]
+    let p = parsePerm("(1 7)(3 2 6)(5 8)") # [0 6][1 5 2][4 7]
     let s = @[@[1, 5, 2], @[0, 6, 4], @[0, 7, 4]]
     for i, c in p.splitCycles3:
       check(c == s[i])
 
   test "splitCycles3 3":
     expect PermError:
-      let p = parseCycles("(1 2)(3 8)(7 4)")
+      let p = parsePerm("(1 2)(3 8)(7 4)")
       discard p.splitCycles3
     expect PermError:
-      let q = parseCycles("(8 1)")
+      let q = parsePerm("(8 1)")
       discard q.splitCycles3

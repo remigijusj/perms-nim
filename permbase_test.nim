@@ -18,7 +18,7 @@ suite "permbase":
   test "perms":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = parseBase(data)
-    check(base.perms == @[parseCycles("(1, 2, 3)"), parseCycles("(3, 4)")])
+    check(base.perms == @[parsePerm("(1, 2, 3)"), parsePerm("(3, 4)")])
 
   test "sign 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
@@ -115,7 +115,7 @@ suite "stage 2":
   test "conjugate":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = parseBase(data)
-    var seed = parseCycles("(1, 4)(2, 3)").cycles
+    var seed = parsePerm("(1, 4)(2, 3)").cycles
     check(seed[0] == newCycle(@[0, 3]))
     check(seed[1] == newCycle(@[1, 2]))
     var list = newSeq[tuple[c: Cycle; i, j: int]]()

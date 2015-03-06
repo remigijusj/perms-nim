@@ -14,7 +14,7 @@ proc parseBase*(data: string): PermBase =
   result = newSeq[BaseItem]()
   for line in splitLines(data):
     if line =~ re"^(\w+):\s+(.+)":
-      result.add((matches[0], parseCycles(matches[1]), -1))
+      result.add((matches[0], parsePerm(matches[1]), -1))
 
 
 proc printBase*(base: PermBase): string =
