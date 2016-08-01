@@ -1,4 +1,4 @@
-import algorithm, math, re, sequtils, strutils, unsigned
+import algorithm, math, nre, random, sequtils, strutils, unsigned
 
 randomize()
 
@@ -217,7 +217,7 @@ proc conjugate*(c: Cycle, q: Perm): Cycle =
 
 # ------ signature ------
 
-proc gcd(a, b): auto =
+proc gcd(a, b: auto): auto =
   var
     t = 0
     a = a
@@ -229,7 +229,7 @@ proc gcd(a, b): auto =
   a
 
 
-proc lcm(a, b): auto =
+proc lcm(a, b: auto): auto =
   a * (b div gcd(a, b))
 
 

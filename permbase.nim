@@ -1,4 +1,4 @@
-import algorithm, math, perm, re, strutils
+import algorithm, math, perm, nre, strutils
 
 var debug = isMainModule
 
@@ -13,8 +13,8 @@ type PermBase* = seq[BaseItem]
 proc parseBase*(data: string): PermBase =
   result = newSeq[BaseItem]()
   for line in splitLines(data):
-    if line =~ re"^(\w+):\s+(.+)":
-      result.add((matches[0], parsePerm(matches[1]), -1))
+    let m = line.match(re"^(\w+):\s+(.+)")
+    result.add((m.get.captures[0], parsePerm(m.get.captures[1]), -1))
 
 
 proc printBase*(base: PermBase): string =
