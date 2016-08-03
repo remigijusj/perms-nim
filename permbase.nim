@@ -1,20 +1,21 @@
 import algorithm, math, perm, nre, strutils
+from sequtils import mapIt
 
 var debug = isMainModule
 
-type BaseItem = tuple
+type BaseItem[N: static[int]] = tuple
   name: string
-  perm: Perm
+  perm: Perm[N]
   inverse: int
 
-type PermBase* = seq[BaseItem]
+type PermBase*[N: static[int]] = seq[BaseItem[N]]
 
 
-proc parseBase*(data: string): PermBase =
-  result = newSeq[BaseItem]()
+proc parseBase*(data: string, N: static[int]): PermBase[N] =
+  result = newSeq[BaseItem[N]]()
   for line in splitLines(data):
     let m = line.match(re"^(\w+):\s+(.+)")
-    result.add((m.get.captures[0], parsePerm(m.get.captures[1]), -1))
+    result.add((m.get.captures[0], parsePerm(m.get.captures[1], N), -1))
 
 
 proc printBase*(base: PermBase): string =
@@ -25,24 +26,21 @@ proc printBase*(base: PermBase): string =
     result.add "$#: $#" % [item.name, printCycles(item.perm)]
 
 
-proc randomBase*(size: int): PermBase =
-  result = newSeq[BaseItem](size)
+proc randomBase*(size: int, N: static[int]): PermBase[N] =
+  result = newSeq[BaseItem[N]](size)
   for i in 0 .. <size:
     let name = $('A'.succ(i))
-    result[i] = (name, randomPerm(), -1)
+    result[i] = (name, randomPerm(N), -1)
 
 
-proc perms*(base: PermBase): seq[Perm] =
-  result = newSeq[Perm](base.len)
-  for i, item in base:
-    result[i] = item.perm
+proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
+  result = base.mapIt(Perm[N], it.perm)
 
 
 proc sign*(base: PermBase): int =
   for item in base:
     if item.perm.sign == -1:
       return -1
-
   return 1
 
 
@@ -56,13 +54,13 @@ proc normalize*(base: PermBase): PermBase =
       result.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
 
 
-proc composeSeq*(base: PermBase, list: seq[int]): Perm =
-  result = identity()
+proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
+  result = identity(N)
   for i in list:
     result = result * base[i].perm
 
 
-proc factorNames*(base: PermBase, list: seq[int], sep = ""): string =
+proc factorNames*[N: static[int]](base: PermBase[N], list: seq[int], sep = ""): string =
   result = ""
   for i, it in list:
     if i > 0:
@@ -78,7 +76,7 @@ proc decompose(i, level, k: int): seq[int] =
     val = val div k
 
 
-iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
+iterator multiply*[N: static[int]](list: seq[Perm[N]], base: PermBase[N]): tuple[p: Perm[N], k: int] =
   let n = base.len
   var k: int
   for i, p in list:
@@ -90,14 +88,13 @@ iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
         yield (p * it.perm, k)
 
 
-iterator multiSearch(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
+iterator multiSearch[N: static[int]](base: PermBase[N], levels: int): tuple[p: Perm[N]; i, level: int] =
   let k = base.len
-  var list: seq[Perm] = @[identity()]
-  var mult: seq[Perm]
+  var list: seq[Perm[N]] = @[identity(N)]
 
   for level in 1 .. levels:
     if debug: echo "--- ", level
-    mult = newSeq[Perm](list.len * k)
+    var mult = newSeq[Perm[N]](list.len * k)
     for p, i in list.multiply(base):
       if p.isZero or p.isIdentity:
         continue
@@ -107,7 +104,7 @@ iterator multiSearch(base: PermBase, levels: int): tuple[p: Perm; i, level: int]
     swap(list, mult)
 
 
-proc searchCycle*(base: PermBase; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle], s: seq[seq[int]]] =
+proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle], s: seq[seq[int]]] =
   result.c = newSeq[Cycle]()
   result.s = newSeq[seq[int]]()
   for p, i, level in base.multiSearch(levels):
@@ -202,7 +199,7 @@ proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
       result.add(cov[k])
 
 
-proc factorize*(base: PermBase, target: Perm, full = false): seq[int] =
+proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false): seq[int] =
   let sign = base.sign
   # stage 1
   let length = (5 + sign) div 2 # 2 or 3
@@ -216,12 +213,13 @@ proc factorize*(base: PermBase, target: Perm, full = false): seq[int] =
 
 
 when isMainModule:
+  const N = 8
   # C2 x C2
-  let invo = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
+  let invo = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)", N)
   discard invo.searchCycle(4, 2)
   echo "---------"
   # (C3 x C3) : C4
-  let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
-  let seed = @[newCycle(@[1, 3])]
-  let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
+  let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)", N) # [0 1 2 3][4 5], [0 2 4]
+  let seed = @[newCycle(@[1, 3], N)]
+  let target = @[newCycle(@[0, 4], N), newCycle(@[1, 5], N)]
   discard base.coverCycles(seed, target)

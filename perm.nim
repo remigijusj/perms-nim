@@ -1,16 +1,15 @@
-import algorithm, math, nre, random, sequtils, strutils, unsigned
+import algorithm, math, random, nre, sequtils, strutils # , unsigned
 
 randomize()
 
+type P = uint8 # point, max 256, TODO: parametrize
 
-const N* = 8 # <= 255
-type P* = uint8
+type Perm*[N: static[int]] = array[N, P]
 
-type Perm* = array[N, P]
-
+# TODO: parameterize by N?, object?
 type Cycle* = seq[P]
 
-type Signature* = array[N+1, int]
+type Signature*[N: static[int]] = array[N+1, int]
 
 type PermError* = object of Exception
 
@@ -21,7 +20,7 @@ proc valid(p: Perm): bool =
   var check = p
   check.sort(system.cmp[P])
 
-  for i in 0 .. <N:
+  for i in 0 .. <p.len:
     if int(check[i]) != i:
       return false
 
@@ -48,7 +47,7 @@ proc rotateToMin[T](list: var seq[T]) =
 
 # ------ constructors ------
 
-proc newPerm*(data: seq[int]): Perm =
+proc newPerm*(data: seq[int], N: static[int]): Perm[N] =
   if data.len > N:
     raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
@@ -59,7 +58,8 @@ proc newPerm*(data: seq[int]): Perm =
     raise PermError.newException("seq invalid")
 
 
-proc newCycle*(data: seq[int]): Cycle =
+# TODO: avoid N?
+proc newCycle*(data: seq[int], N: static[int]): Cycle =
   result = newSeq[P](data.len)
   if data.len > N:
     raise PermError.newException("seq length mismatch")
@@ -69,20 +69,21 @@ proc newCycle*(data: seq[int]): Cycle =
   rotateToMin(result)
 
 
-proc identity*: Perm =
+proc identity*(N: static[int]): Perm[N] =
   for i in 0 .. <N:
     result[i] = P(i)
 
 
-proc randomPerm*: Perm =
-  result = identity()
+proc randomPerm*(N: static[int]): Perm[N] =
+  result = identity(N)
   for i in countdown(result.high, 0):
     let j = random(i + 1)
     swap(result[i], result[j])
 
 
-proc toPerm*(c: Cycle): Perm =
-  result = identity()
+# TODO: avoid N
+proc toPerm*(c: Cycle, N: static[int]): Perm[N] =
+  result = identity(N)
   if c.len < 2:
     return
 
@@ -112,7 +113,7 @@ proc isIdentity*(p: Perm): bool =
 
 
 # optimized p.inverse == p
-proc isInvolution*(p: Perm): bool = 
+proc isInvolution*[N: static[int]](p: Perm[N]): bool = 
   for i in 0 .. <N:
     if p[p[i]] != P(i):
       return false
@@ -138,7 +139,7 @@ proc `$`*(p: Perm): string =
 proc `==`*(x: P, y: P): bool = int(x) == int(y)
 
 
-proc `==`*(p: Perm, q: Perm): bool =
+proc `==`*[N: static[int]](p: Perm[N], q: Perm[N]): bool =
   for i in 0 .. <N:
     if p[i] != q[i]:
       return false
@@ -146,7 +147,7 @@ proc `==`*(p: Perm, q: Perm): bool =
   return true
 
 
-proc `==`*(p: Perm, q: array[N, int]): bool =
+proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
   for i in 0 .. <N:
     if int(p[i]) != int(q[i]):
       return false
@@ -166,17 +167,17 @@ proc `==`*[T](c: Cycle, d: seq[T]): bool =
 
 # ------ actions ------
 
-proc inverse*(p: Perm): Perm =
+proc inverse*[N: static[int]](p: Perm[N]): Perm[N] =
   for i in 0 .. <N:
     result[p[i]] = P(i)
 
 
-proc `*`*(p: Perm, q: Perm): Perm =
+proc `*`*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
   for i in 0 .. <N:
     result[i] = q[p[i]]
 
 
-proc compose*(list: varargs[Perm]): Perm =
+proc compose*[N: static[int]](list: varargs[Perm[N]]): Perm[N] =
   var p: P
   for i in 0 .. <N:
     p = P(i)
@@ -185,9 +186,9 @@ proc compose*(list: varargs[Perm]): Perm =
     result[i] = p
 
 
-proc power*(p: Perm, n: int): Perm =
+proc power*[N: static[int]](p: Perm[N], n: int): Perm[N] =
   if n == 0:
-    return identity()
+    return identity(N)
 
   if n < 0:
     return p.inverse.power(-n)
@@ -200,14 +201,14 @@ proc power*(p: Perm, n: int): Perm =
     result[i] = k
 
 
-proc conjugate*(p: Perm, q: Perm): Perm =
+proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
   for i in 0 .. <N:
     var j = q[i]
     var k = p[i]
     result[j] = q[k]
 
 
-proc conjugate*(c: Cycle, q: Perm): Cycle =
+proc conjugate*[N: static[int]](c: Cycle, q: Perm[N]): Cycle =
   result = newSeq[P](c.len)
   for i in 0 .. <c.len:
     result[i] = q[c[i]]
@@ -233,9 +234,9 @@ proc lcm(a, b: auto): auto =
   a * (b div gcd(a, b))
 
 
-proc signature*(p: Perm): Signature =
+proc signature*[N: static[int]](p: Perm[N]): Signature[N] =
   var marks {.global.}: array[N, bool]
-  var sgn {.global.}: Signature
+  var sgn {.global.}: array[N+1, int]
 
   # WARNING: unsafe, size matters
   zeroMem(addr(marks), N)
@@ -263,7 +264,7 @@ proc signature*(p: Perm): Signature =
   result = sgn
 
 
-proc signFrom(sgn: Signature): int {.noSideEffect.} =
+proc signFrom[N: static[int]](sgn: Signature[N]): int {.noSideEffect.} =
   var sum = 0
   for i in countup(2, N, 2):
     sum += sgn[i]
@@ -283,7 +284,7 @@ proc orderFrom(sgn: Signature, max = 0): int {.noSideEffect.} =
         return -1
 
 
-proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int {.noSideEffect.} =
+proc orderToCycleFrom[N: static[int]](sgn: Signature[N], n: int, max = 0): int {.noSideEffect.} =
   # there must be unique n-cycle
   if n > N or sgn[n] != 1:
     return -1
@@ -319,7 +320,7 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
-proc scanCycleRep(data: string): seq[int] =
+proc scanCycleRep(data: string, N: static[int]): seq[int] =
   result = newSeq[int]()
   for item in data.findAll(re"\d+|[();]+"):
     var part: int
@@ -344,8 +345,8 @@ proc scanCycleRep(data: string): seq[int] =
 
 # build permutation
 # ex: []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1} -> []Pt{1, 0, 7, 6, 4, 5, 3, 2}
-proc buildPermFromCycleRep(parts: seq[int]): Perm =
-  var perm = identity()
+proc buildPermFromCycleRep(parts: seq[int], N: static[int]): Perm[N] =
+  var perm = identity(N)
 
   var first = -1
   var point = -1
@@ -372,11 +373,11 @@ proc buildPermFromCycleRep(parts: seq[int]): Perm =
   return perm
 
 
-proc parsePerm*(data: string): Perm =
-  buildPermFromCycleRep(scanCycleRep(data))
+proc parsePerm*(data: string, N: static[int]): Perm[N] =
+  buildPermFromCycleRep(scanCycleRep(data, N), N)
 
 
-proc cycles*(p: Perm): seq[Cycle] =
+proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle] =
   var cycles = newSeq[seq[P]]()
   var marks: array[N, bool]
   var m = 0

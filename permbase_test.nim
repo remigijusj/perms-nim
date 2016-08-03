@@ -1,15 +1,17 @@
 import sequtils, perm, permbase, unittest
 
+const N = 8
+
 suite "permbase":
   test "basics":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     check(base.sign == -1)
     check(base.len == 2)
     check(base.printBase == data)
 
   test "random":
-    let base = randomBase(3)
+    let base = randomBase(3, N)
     check(base.len == 3)
     check(base[0].name == "A")
     check(base[1].name == "B")
@@ -17,22 +19,22 @@ suite "permbase":
 
   test "perms":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data)
-    check(base.perms == @[parsePerm("(1, 2, 3)"), parsePerm("(3, 4)")])
+    let base = parseBase(data, N)
+    check(base.perms == @[parsePerm("(1, 2, 3)", N), parsePerm("(3, 4)", N)])
 
   test "sign 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     check(base.sign == -1)
 
   test "sign 1":
     let data = "A: (1, 2, 3)\nB: (2, 3)(4, 5)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     check(base.sign == 1)
 
   test "normalize 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data).normalize
+    let base = parseBase(data, N).normalize
     check(base.sign == -1)
     check(base.len == 3)
     check(base[2].name == "A'")
@@ -40,14 +42,14 @@ suite "permbase":
 
   test "normalize 1":
     let data = "A: (1, 2)\nB: (3, 4)"
-    let base = parseBase(data).normalize
+    let base = parseBase(data, N).normalize
     check(base.len == 2)
     check(base[0].inverse == 0)
     check(base[1].inverse == 1)
 
   test "normalize 2":
     let data = "A: (1, 2, 4)\nB: (3, 1)\nX: (5, 4, 3, 2, 1)"
-    let base = parseBase(data).normalize
+    let base = parseBase(data, N).normalize
     check(base.len == 5)
     check(base[0].inverse == 3)
     check(base[1].inverse == 1)
@@ -61,8 +63,8 @@ suite "permbase":
 
   test "composeSeq":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
-    let base = parseBase(data)
-    check(base.composeSeq(newSeq[int]()) == identity())
+    let base = parseBase(data, N)
+    check(base.composeSeq(newSeq[int]()) == identity(N))
     check(base.composeSeq(@[0]) == base[0].perm)
     check(base.composeSeq(@[1]) == base[1].perm)
     check(base.composeSeq(@[0, 1, 0]) == [0, 1, 2, 7, 3, 4, 5, 6])
@@ -70,7 +72,7 @@ suite "permbase":
 
   test "factorNames":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
-    let base = parseBase(data).normalize
+    let base = parseBase(data, N).normalize
     check(base.factorNames(newSeq[int]()) == "")
     check(base.factorNames(@[0]) == "A")
     check(base.factorNames(@[1]) == "B")
@@ -81,8 +83,8 @@ suite "permbase":
 suite "stage 1":
   test "multiply":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data)
-    var list = newSeq[Perm](4)
+    let base = parseBase(data, N)
+    var list = newSeq[Perm[N]](4)
     for perm, i in base.perms.multiply(base):
       list[i] = perm
     check(list[0].printCycles == "(1, 3, 2)")
@@ -92,29 +94,29 @@ suite "stage 1":
 
   test "searchCycle 0":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     let norm = base.normalize
     let (list, meta) = norm.searchCycle(3, 8)
     check(list.len == 1)
     check(meta.len == 1)
-    check(list[0] == newCycle(@[1, 3, 6]))
+    check(list[0] == newCycle(@[1, 3, 6], N))
     check(meta[0] == @[0, 1, 1, 5]) # 5 is order
 
   test "searchCycle 1":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     let norm = base.normalize
     let (list, meta) = norm.searchCycle(3, 4, 8, true)
     check(list.len == 10)
     check(meta.len == 10)
-    check(list[9] == newCycle(@[0, 6, 3]))
+    check(list[9] == newCycle(@[0, 6, 3], N))
     check(meta[9] == @[2, 2, 0, 2, 5]) # 5 is order
     let reps = list.mapIt(string, $it)
     check(reps.deduplicate.len == 10)
 
   test "searchCycle 2":
     let data = "A: (1 2)(3 4)\nB: (1 3)(2 4)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     let (list, meta) = base.searchCycle(3, 4)
     check(list.len == 0)
     check(meta.len == 0)
@@ -123,23 +125,23 @@ suite "stage 1":
 suite "stage 2":
   test "conjugate":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
-    let base = parseBase(data)
-    var seed = parsePerm("(1, 4)(2, 3)").cycles
-    check(seed[0] == newCycle(@[0, 3]))
-    check(seed[1] == newCycle(@[1, 2]))
+    let base = parseBase(data, N)
+    var seed = parsePerm("(1, 4)(2, 3)", N).cycles
+    check(seed[0] == newCycle(@[0, 3], N))
+    check(seed[1] == newCycle(@[1, 2], N))
     var list = newSeq[tuple[c: Cycle; i, j: int]]()
     for c, i, j in seed.conjugate(base):
       list.add((c, i, j))
     check(list.len == 4)
-    check(list[0] == (newCycle(@[1, 3]), 0, 0))
-    check(list[1] == (newCycle(@[0, 2]), 0, 1))
-    check(list[2] == (newCycle(@[0, 2]), 1, 0))
-    check(list[3] == (newCycle(@[1, 3]), 1, 1))
+    check(list[0] == (newCycle(@[1, 3], N), 0, 0))
+    check(list[1] == (newCycle(@[0, 2], N), 0, 1))
+    check(list[2] == (newCycle(@[0, 2], N), 1, 0))
+    check(list[3] == (newCycle(@[1, 3], N), 1, 1))
 
   test "coverCycles 0":
-    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)")
-    let seed = @[newCycle(@[1, 3])]
-    let target = @[newCycle(@[0, 4]), newCycle(@[1, 5])]
+    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)", N)
+    let seed = @[newCycle(@[1, 3], N)]
+    let target = @[newCycle(@[0, 4], N), newCycle(@[1, 5], N)]
     let covers = base.coverCycles(seed, target)
     check(covers.len == 2)
     check(covers[0] == @[0, 0, 1, 1])
@@ -147,32 +149,32 @@ suite "stage 2":
 
   test "coverCycles 1":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
-    let base = parseBase(data)
+    let base = parseBase(data, N)
     let norm = base.normalize
-    let seed = @[newCycle(@[1, 3, 6])]
-    let target = @[newCycle(@[2, 4, 6]), newCycle(@[5, 3, 1])]
+    let seed = @[newCycle(@[1, 3, 6], N)]
+    let target = @[newCycle(@[2, 4, 6], N), newCycle(@[5, 3, 1], N)]
     let covers = norm.coverCycles(seed, target)
     check(covers == @[@[0, 1], @[0, 1, 0]])
 
   test "coverCycles 2":
     let data = "A: (1 2)(3 4)\nB: (1 3)(2 4)"
-    let base = parseBase(data)
-    let seed = @[newCycle(@[0, 2])]
-    let target = @[newCycle(@[1, 3]), newCycle(@[1, 2])]
+    let base = parseBase(data, N)
+    let seed = @[newCycle(@[0, 2], N)]
+    let target = @[newCycle(@[1, 3], N), newCycle(@[1, 2], N)]
     expect PermError:
       discard base.coverCycles(seed, target)
 
 suite "final":
   test "factorize 0":
-    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)").normalize
-    let perm = parsePerm("(1 3 5)(2 4 6)")
+    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)", N).normalize
+    let perm = parsePerm("(1 3 5)(2 4 6)", N)
     let list = base.factorize(perm)
     check(base.composeSeq(list) == perm)
     check(base.factorNames(list) == "BA'BA")
 
   test "factorize 0a":
-    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)").normalize
-    let perm = parsePerm("(1 3 5)(2 4 6)")
+    let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)", N).normalize
+    let perm = parsePerm("(1 3 5)(2 4 6)", N)
     let list = base.factorize(perm, true)
     check(base.composeSeq(list) == perm)
     check(base.factorNames(list) == "BAB'A'")
