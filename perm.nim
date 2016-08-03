@@ -2,7 +2,9 @@ import algorithm, math, random, nre, sequtils, strutils # , unsigned
 
 randomize()
 
-type P = uint8 # point, max 256, TODO: parametrize
+type World* = int
+
+type P = uint8 # TODO: parametrize, rename Point
 
 type Perm*[N: static[int]] = array[N, P]
 
@@ -47,7 +49,7 @@ proc rotateToMin[T](list: var seq[T]) =
 
 # ------ constructors ------
 
-proc newPerm*(data: seq[int], N: static[int]): Perm[N] =
+proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
   if data.len > N:
     raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
@@ -58,8 +60,7 @@ proc newPerm*(data: seq[int], N: static[int]): Perm[N] =
     raise PermError.newException("seq invalid")
 
 
-# TODO: avoid N?
-proc newCycle*(data: seq[int], N: static[int]): Cycle =
+proc newCycle*(N: static[int], data: seq[int]): Cycle =
   result = newSeq[P](data.len)
   if data.len > N:
     raise PermError.newException("seq length mismatch")
@@ -75,7 +76,7 @@ proc identity*(N: static[int]): Perm[N] =
 
 
 proc randomPerm*(N: static[int]): Perm[N] =
-  result = identity(N)
+  result = N.identity
   for i in countdown(result.high, 0):
     let j = random(i + 1)
     swap(result[i], result[j])
@@ -83,7 +84,7 @@ proc randomPerm*(N: static[int]): Perm[N] =
 
 # TODO: avoid N
 proc toPerm*(c: Cycle, N: static[int]): Perm[N] =
-  result = identity(N)
+  result = N.identity
   if c.len < 2:
     return
 
@@ -188,7 +189,7 @@ proc compose*[N: static[int]](list: varargs[Perm[N]]): Perm[N] =
 
 proc power*[N: static[int]](p: Perm[N], n: int): Perm[N] =
   if n == 0:
-    return identity(N)
+    return N.identity
 
   if n < 0:
     return p.inverse.power(-n)
@@ -320,7 +321,7 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
-proc scanCycleRep(data: string, N: static[int]): seq[int] =
+proc scanCycleRep(N: static[int], data: string): seq[int] =
   result = newSeq[int]()
   for item in data.findAll(re"\d+|[();]+"):
     var part: int
@@ -345,8 +346,8 @@ proc scanCycleRep(data: string, N: static[int]): seq[int] =
 
 # build permutation
 # ex: []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1} -> []Pt{1, 0, 7, 6, 4, 5, 3, 2}
-proc buildPermFromCycleRep(parts: seq[int], N: static[int]): Perm[N] =
-  var perm = identity(N)
+proc buildPermFromCycleRep(N: static[int], parts: seq[int]): Perm[N] =
+  var perm = N.identity
 
   var first = -1
   var point = -1
@@ -373,8 +374,8 @@ proc buildPermFromCycleRep(parts: seq[int], N: static[int]): Perm[N] =
   return perm
 
 
-proc parsePerm*(data: string, N: static[int]): Perm[N] =
-  buildPermFromCycleRep(scanCycleRep(data, N), N)
+proc parsePerm*(N: static[int], data: string): Perm[N] =
+  N.buildPermFromCycleRep(N.scanCycleRep(data))
 
 
 proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle] =

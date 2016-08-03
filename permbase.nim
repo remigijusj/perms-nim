@@ -11,11 +11,11 @@ type BaseItem[N: static[int]] = tuple
 type PermBase*[N: static[int]] = seq[BaseItem[N]]
 
 
-proc parseBase*(data: string, N: static[int]): PermBase[N] =
+proc parseBase*(N: static[int], data: string): PermBase[N] =
   result = newSeq[BaseItem[N]]()
   for line in splitLines(data):
     let m = line.match(re"^(\w+):\s+(.+)")
-    result.add((m.get.captures[0], parsePerm(m.get.captures[1], N), -1))
+    result.add((m.get.captures[0], N.parsePerm(m.get.captures[1]), -1))
 
 
 proc printBase*(base: PermBase): string =
@@ -26,11 +26,11 @@ proc printBase*(base: PermBase): string =
     result.add "$#: $#" % [item.name, printCycles(item.perm)]
 
 
-proc randomBase*(size: int, N: static[int]): PermBase[N] =
+proc randomBase*(N: static[int], size: int): PermBase[N] =
   result = newSeq[BaseItem[N]](size)
   for i in 0 .. <size:
     let name = $('A'.succ(i))
-    result[i] = (name, randomPerm(N), -1)
+    result[i] = (name, N.randomPerm, -1)
 
 
 proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
@@ -55,7 +55,7 @@ proc normalize*(base: PermBase): PermBase =
 
 
 proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
-  result = identity(N)
+  result = N.identity
   for i in list:
     result = result * base[i].perm
 
@@ -90,7 +90,7 @@ iterator multiply*[N: static[int]](list: seq[Perm[N]], base: PermBase[N]): tuple
 
 iterator multiSearch[N: static[int]](base: PermBase[N], levels: int): tuple[p: Perm[N]; i, level: int] =
   let k = base.len
-  var list: seq[Perm[N]] = @[identity(N)]
+  var list: seq[Perm[N]] = @[N.identity]
 
   for level in 1 .. levels:
     if debug: echo "--- ", level
@@ -215,11 +215,11 @@ proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false
 when isMainModule:
   const N = 8
   # C2 x C2
-  let invo = parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)", N)
+  let invo = N.parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
   discard invo.searchCycle(4, 2)
   echo "---------"
   # (C3 x C3) : C4
-  let base = parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)", N) # [0 1 2 3][4 5], [0 2 4]
-  let seed = @[newCycle(@[1, 3], N)]
-  let target = @[newCycle(@[0, 4], N), newCycle(@[1, 5], N)]
+  let base = N.parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
+  let seed = @[N.newCycle(@[1, 3])]
+  let target = @[N.newCycle(@[0, 4]), N.newCycle(@[1, 5])]
   discard base.coverCycles(seed, target)
