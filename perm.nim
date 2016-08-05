@@ -1,4 +1,4 @@
-import algorithm, math, random, nre, sequtils, strutils # , unsigned
+import algorithm, math, random, nre, sequtils, strutils
 
 randomize()
 

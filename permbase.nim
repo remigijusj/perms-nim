@@ -1,4 +1,4 @@
-import algorithm, math, perm, nre, strutils
+import perm, algorithm, math, nre, strutils
 from sequtils import mapIt
 
 var debug = isMainModule
@@ -34,7 +34,7 @@ proc randomBase*(N: static[int], size: int): PermBase[N] =
 
 
 proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
-  result = base.mapIt(Perm[N], it.perm)
+  result = base.mapIt(it.perm)
 
 
 proc sign*(base: PermBase): int =
@@ -210,16 +210,3 @@ proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false
   let covers = base.coverCycles(seed, cycles)
   # finalize
   result = calcFactors(base, meta, covers)
-
-
-when isMainModule:
-  const N = 8
-  # C2 x C2
-  let invo = N.parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
-  discard invo.searchCycle(4, 2)
-  echo "---------"
-  # (C3 x C3) : C4
-  let base = N.parseBase("A: (1 2 3 4)(5 6)\nB: (1 3 5)") # [0 1 2 3][4 5], [0 2 4]
-  let seed = @[N.newCycle(@[1, 3])]
-  let target = @[N.newCycle(@[0, 4]), N.newCycle(@[1, 5])]
-  discard base.coverCycles(seed, target)
