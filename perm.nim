@@ -4,12 +4,11 @@ randomize()
 
 type World* = int
 
-type P = uint8 # TODO: parametrize, rename Point
+type P = uint8 # TODO: static, rename Point
 
 type Perm*[N: static[int]] = array[N, P]
 
-# TODO: parameterize by N?, object?
-type Cycle* = seq[P]
+type Cycle*[N: static[int]] = seq[P]
 
 type Signature*[N: static[int]] = array[N+1, int]
 
@@ -60,7 +59,7 @@ proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
     raise PermError.newException("seq invalid")
 
 
-proc newCycle*(N: static[int], data: seq[int]): Cycle =
+proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
   result = newSeq[P](data.len)
   if data.len > N:
     raise PermError.newException("seq length mismatch")
@@ -82,8 +81,7 @@ proc randomPerm*(N: static[int]): Perm[N] =
     swap(result[i], result[j])
 
 
-# TODO: avoid N
-proc toPerm*(c: Cycle, N: static[int]): Perm[N] =
+proc toPerm*[N: static[int]](c: Cycle[N]): Perm[N] =
   result = N.identity
   if c.len < 2:
     return
@@ -209,7 +207,7 @@ proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
     result[j] = q[k]
 
 
-proc conjugate*[N: static[int]](c: Cycle, q: Perm[N]): Cycle =
+proc conjugate*[N: static[int]](c: Cycle[N], q: Perm[N]): Cycle[N] =
   result = newSeq[P](c.len)
   for i in 0 .. <c.len:
     result[i] = q[c[i]]
@@ -378,7 +376,7 @@ proc parsePerm*(N: static[int], data: string): Perm[N] =
   N.buildPermFromCycleRep(N.scanCycleRep(data))
 
 
-proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle] =
+proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
   var cycles = newSeq[seq[P]]()
   var marks: array[N, bool]
   var m = 0
@@ -423,17 +421,18 @@ proc printCycles*(p: Perm): string =
   for c in p.cycles:
     result.add printCycle(c)
 
+
 # canonical star decomposition
-proc splitCycles2(p: Perm): seq[Cycle] =
-  result = newSeq[Cycle]()
+proc splitCycles2[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
+  result = @[]
   for c in p.cycles:
     for j in 1 .. c.high:
       result.add Cycle(@[c[0], c[j]])
 
 
 # certain 3-cycles decomposition
-proc splitCycles3(p: Perm): seq[Cycle] =
-  result = newSeq[Cycle]()
+proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
+  result = @[]
   # odd cycles
   for c in p.cycles:
     if c.len mod 2 == 0:
@@ -442,14 +441,14 @@ proc splitCycles3(p: Perm): seq[Cycle] =
       result.add Cycle(@[c[0], c[j], c[j+1]])
 
   # even cycles
-  var r: Cycle
+  var r: seq[P]
   for c in p.cycles:
     if c.len mod 2 == 1:
       continue
     if r.isNil():
       for j in countup(1, c.high-1, 2):
         result.add Cycle(@[c[0], c[j], c[j+1]])
-      r = Cycle(@[c[0], c[c.high]])
+      r = @[c[0], c[c.high]]
     else:
       result.add Cycle(@[r[0], r[1], c[0]])
       result.add Cycle(@[r[0], c[1], c[0]])
@@ -462,7 +461,7 @@ proc splitCycles3(p: Perm): seq[Cycle] =
 
 
 # proxy wrapper
-proc splitCycles*(p: Perm, length: int): seq[Cycle] =
+proc splitCycles*[N: static[int]](p: Perm[N], length: int): seq[Cycle[N]] =
   if length == 2:
     return splitCycles2(p)
   elif length == 3:

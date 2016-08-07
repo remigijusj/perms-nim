@@ -104,8 +104,8 @@ iterator multiSearch[N: static[int]](base: PermBase[N], levels: int): tuple[p: P
     swap(list, mult)
 
 
-proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle], s: seq[seq[int]]] =
-  result.c = newSeq[Cycle]()
+proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle[N]], s: seq[seq[int]]] =
+  result.c = @[]
   result.s = newSeq[seq[int]]()
   for p, i, level in base.multiSearch(levels):
     let o = p.orderToCycle(target, max)

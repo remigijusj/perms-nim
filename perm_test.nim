@@ -31,11 +31,11 @@ suite "constructors":
 
   test "toPerm 0":
     let c = W.newCycle(@[1, 2, 3])
-    check(c.toPerm(W) == [0, 2, 3, 1, 4, 5, 6, 7])
+    check(c.toPerm == [0, 2, 3, 1, 4, 5, 6, 7])
 
   test "toPerm 1":
     let c = W.newCycle(@[3])
-    check(c.toPerm(W) == W.identity())
+    check(c.toPerm == W.identity())
 
 
 suite "basics":
@@ -181,7 +181,7 @@ suite "actions":
   test "conjugate c2":
     let c = W.newCycle(@[0, 4, 7])
     let q = W.randomPerm()
-    check(c.conjugate(q).toPerm(W) == c.toPerm(W).conjugate(q))
+    check(c.conjugate(q).toPerm == c.toPerm.conjugate(q))
 
 
 suite "signature":

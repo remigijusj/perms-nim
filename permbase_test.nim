@@ -129,7 +129,7 @@ suite "stage 2":
     var seed = W.parsePerm("(1, 4)(2, 3)").cycles
     check(seed[0] == W.newCycle(@[0, 3]))
     check(seed[1] == W.newCycle(@[1, 2]))
-    var list = newSeq[tuple[c: Cycle; i, j: int]]()
+    var list = newSeq[tuple[c: Cycle[W]; i, j: int]]()
     for c, i, j in seed.conjugate(base):
       list.add((c, i, j))
     check(list.len == 4)
