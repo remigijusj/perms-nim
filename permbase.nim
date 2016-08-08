@@ -10,6 +10,8 @@ type BaseItem[N: static[int]] = tuple
 
 type PermBase*[N: static[int]] = seq[BaseItem[N]]
 
+type FactorizeError* = object of Exception
+
 
 proc parseBase*(N: static[int], data: string): PermBase[N] =
   result = newSeq[BaseItem[N]]()
@@ -106,7 +108,7 @@ iterator multiSearch[N: static[int]](base: PermBase[N], levels: int): tuple[p: P
 
 proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle[N]], s: seq[seq[int]]] =
   result.c = @[]
-  result.s = newSeq[seq[int]]()
+  result.s = @[]
   for p, i, level in base.multiSearch(levels):
     let o = p.orderToCycle(target, max)
     if o > -1:
@@ -177,7 +179,7 @@ proc coverCycles*(base: PermBase; seed, target: seq[Cycle]): seq[seq[int]] =
         return
 
   if cnt < target.len:
-    raise PermError.newException("failed to cover all targets")
+    raise FactorizeError.newException("failed to cover all targets")
 
 
 proc nextPowerOver(k, size: int): int = ceil(ln(size.float) / ln(k.float)).int
@@ -199,14 +201,18 @@ proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
       result.add(cov[k])
 
 
-proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false): seq[int] =
+proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false, minlevels = 0): seq[int] =
+  # - stage 0
   let sign = base.sign
-  # stage 1
   let length = (5 + sign) div 2 # 2 or 3
-  let levels = nextPowerOver(base.len, N*N)
+  let levels = max(minlevels, nextPowerOver(base.len, N*N))
+  # - stage 1
   let (seed, meta) = base.searchCycle(length, levels, N, full)
-  # stage 2
+  if debug: echo("SEED: ", seed, "\nMETA: ", meta)
+  if seed.len == 0:
+    raise FactorizeError.newException("failed to find short cycle")
+  # - stage 2
   let cycles = target.splitCycles(length)
   let covers = base.coverCycles(seed, cycles)
-  # finalize
+  # - finalize
   result = calcFactors(base, meta, covers)

@@ -111,7 +111,7 @@ suite "stage 1":
     check(meta.len == 10)
     check(list[9] == W.newCycle(@[0, 6, 3]))
     check(meta[9] == @[2, 2, 0, 2, 5]) # 5 is order
-    let reps = list.mapIt(string, $it)
+    let reps = list.mapIt($it)
     check(reps.deduplicate.len == 10)
 
   test "searchCycle 2":
@@ -161,7 +161,7 @@ suite "stage 2":
     let base = W.parseBase(data)
     let seed = @[W.newCycle(@[0, 2])]
     let target = @[W.newCycle(@[1, 3]), W.newCycle(@[1, 2])]
-    expect PermError:
+    expect FactorizeError:
       discard base.coverCycles(seed, target)
 
 suite "final":
