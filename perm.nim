@@ -7,11 +7,11 @@ randomize()
 
 type World* = int
 
-type P = uint8 # TODO: static, rename Point
+type Point* = uint8 # TODO: static
 
-type Perm*[N: static[int]] = array[N, P]
+type Perm*[N: static[int]] = array[N, Point]
 
-type Cycle*[N: static[int]] = seq[P]
+type Cycle*[N: static[int]] = seq[Point]
 
 type Signature*[N: static[int]] = array[N+1, int]
 
@@ -22,7 +22,7 @@ type PermError* = object of Exception
 
 proc valid(p: Perm): bool =
   var check = p
-  check.sort(system.cmp[P])
+  check.sort(system.cmp[Point])
 
   for i in 0 .. <p.len:
     if int(check[i]) != i:
@@ -55,26 +55,26 @@ proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
   if data.len > N:
     raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
-    result[i] = P(data[i])
+    result[i] = Point(data[i])
   for i in data.len .. <N:
-    result[i] = P(i)
+    result[i] = Point(i)
   if not result.valid:
     raise PermError.newException("seq invalid")
 
 
 proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
-  result = newSeq[P](data.len)
+  result = newSeq[Point](data.len)
   if data.len > N:
     raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
-    result[i] = P(data[i])
+    result[i] = Point(data[i])
 
   rotateToMin(result)
 
 
 proc identity*(N: static[int]): Perm[N] =
   for i in 0 .. <N:
-    result[i] = P(i)
+    result[i] = Point(i)
 
 
 proc randomPerm*(N: static[int]): Perm[N] =
@@ -117,16 +117,16 @@ proc isIdentity*(p: Perm): bool =
 # optimized p.inverse == p
 proc isInvolution*[N: static[int]](p: Perm[N]): bool = 
   for i in 0 .. <N:
-    if p[p[i]] != P(i):
+    if p[p[i]] != Point(i):
       return false
 
   return true
 
 
-#proc `[]`(p: Perm, x: P): P = p[int(x)]
+#proc `[]`(p: Perm, x: Point): Point = p[int(x)]
 
 
-#proc `$`*(d: P): string = $(int(d))
+#proc `$`*(d: Point): string = $(int(d))
 
 
 proc `$`*(p: Perm): string =
@@ -138,7 +138,7 @@ proc `$`*(p: Perm): string =
   result.add "]"
 
 
-proc `==`*(x: P, y: P): bool = int(x) == int(y)
+proc `==`*(x: Point, y: Point): bool = int(x) == int(y)
 
 
 proc `==`*[N: static[int]](p: Perm[N], q: Perm[N]): bool =
@@ -171,7 +171,7 @@ proc `==`*[T](c: Cycle, d: seq[T]): bool =
 
 proc inverse*[N: static[int]](p: Perm[N]): Perm[N] =
   for i in 0 .. <N:
-    result[p[i]] = P(i)
+    result[p[i]] = Point(i)
 
 
 proc `*`*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
@@ -180,9 +180,9 @@ proc `*`*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
 
 
 proc compose*[N: static[int]](list: varargs[Perm[N]]): Perm[N] =
-  var p: P
+  var p: Point
   for i in 0 .. <N:
-    p = P(i)
+    p = Point(i)
     for perm in list:
       p = perm[p]
     result[i] = p
@@ -196,7 +196,7 @@ proc power*[N: static[int]](p: Perm[N], n: int): Perm[N] =
     return p.inverse.power(-n)
 
   for i in 0 .. <N:
-    var k = P(i)
+    var k = Point(i)
     for j in 0 .. <n:
       k = p[k]
 
@@ -211,7 +211,7 @@ proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
 
 
 proc conjugate*[N: static[int]](c: Cycle[N], q: Perm[N]): Cycle[N] =
-  result = newSeq[P](c.len)
+  result = newSeq[Point](c.len)
   for i in 0 .. <c.len:
     result[i] = q[c[i]]
 
@@ -358,7 +358,7 @@ proc buildPermFromCycleRep(N: static[int], parts: seq[int]): Perm[N] =
         if int(perm[point]) != point:
           raise PermError.newException("integers must be unique")
 
-        perm[point] = P(first)
+        perm[point] = Point(first)
         first = -1
         point = -1
     else:
@@ -369,7 +369,7 @@ proc buildPermFromCycleRep(N: static[int], parts: seq[int]): Perm[N] =
         if int(perm[point]) != point:
           raise PermError.newException("integers must be unique")
 
-        perm[point] = P(part)
+        perm[point] = Point(part)
         point = part
 
   return perm
@@ -380,7 +380,7 @@ proc parsePerm*(N: static[int], data: string): Perm[N] =
 
 
 proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
-  var cycles = newSeq[seq[P]]()
+  var cycles = newSeq[seq[Point]]()
   var marks: array[N, bool]
   var m = 0
   while true:
@@ -391,11 +391,11 @@ proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
       break
 
     # construct a cycle
-    var cycle = newSeq[P]()
+    var cycle = newSeq[Point]()
     var j = m
     while not marks[j]:
       marks[j] = true
-      cycle.add(P(j))
+      cycle.add(Point(j))
       j = int(p[j])
 
     if cycle.len > 1:
@@ -403,7 +403,7 @@ proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
 
   # exceptional case: empty
   if cycles.len == 0:
-    let cycle = newSeq[P]()
+    let cycle = newSeq[Point]()
     cycles.add(cycle)
 
   return cycles
@@ -444,7 +444,7 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
       result.add Cycle(@[c[0], c[j], c[j+1]])
 
   # even cycles
-  var r: seq[P]
+  var r: seq[Point]
   for c in p.cycles:
     if c.len mod 2 == 1:
       continue
