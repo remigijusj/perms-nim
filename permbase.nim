@@ -2,9 +2,9 @@ import perm, nre
 from algorithm import reverse
 from math      import ceil, ln
 from sequtils  import mapIt, anyIt
-from strutils  import splitLines, `%`
+from strutils  import join, splitLines, `%`
 
-var debug = isMainModule
+var debug* {.global.} = false
 
 type BaseItem[N: static[int]] = tuple
   name: string
@@ -87,12 +87,29 @@ proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
     result = result * base[i].perm
 
 
-proc factorNames*[N: static[int]](base: PermBase[N], list: seq[int], sep = ""): string =
-  result = ""
-  for i, it in list:
-    if i > 0:
-      result.add(sep)
-    result.add(base[it].name)
+# warning: assumes list does not start with -1
+proc grouped(list: seq[int]): seq[tuple[n: int, s: string]] =
+  result = @[]
+  var prev = -1
+  var count = 0
+  for this in list:
+    if this == prev:
+      count.inc
+    else:
+      if count > 0:
+        let suffix = if count == 1: "" else: $count
+        result.add((n: prev, s: suffix))
+      count = 1
+      prev = this
+  let suffix = if count == 1: "" else: $count
+  result.add((n: prev, s: suffix))
+
+
+proc factorNames*[N: static[int]](base: PermBase[N], list: seq[int], sep = "", concise = false): string =
+  if concise:
+    result = grouped(list).mapIt(base[it.n].name & it.s).join(sep)
+  else:
+    result = list.mapIt(base[it].name).join(sep)
 
 
 proc decompose(i, level, k: int): seq[int] =

@@ -4,7 +4,6 @@ const W = 8
 
 discard newSeq[Perm[W]](0) # ~~~
 
-
 # (C3 x C3) : C4
 # [0 1 2 3][4 5], [0 2 4]
 proc test1: void =

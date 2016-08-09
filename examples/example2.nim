@@ -5,6 +5,7 @@ const W = 8
 
 discard newSeq[Perm[W]](0) # ~~~
 
+debug = false
 
 proc rnd(seed: int): void =
   randomize(seed)
@@ -13,9 +14,11 @@ proc rnd(seed: int): void =
   let norm = base.normalize
   echo base.printBase
   echo "X: ", perm.printCycles
+
   let list = norm.factorize(perm, false, 9)
   echo "LIST: ", list
   echo "SEQ: ", norm.factorNames(list)
+  echo "CON: ", norm.factorNames(list, "-", true)
   echo "EQL: ", (norm.composeSeq(list) == perm)
   echo "LEN: ", list.len
 

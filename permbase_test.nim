@@ -89,6 +89,7 @@ suite "permbase":
     check(base.factorNames(@[1]) == "B")
     check(base.factorNames(@[0, 1, 2]) == "ABB'")
     check(base.factorNames(@[1, 0, 1], ",") == "B,A,B")
+    check(base.factorNames(@[0, 0, 0, 1, 2, 2], "-", true) == "A3-B-B'2")
 
 
 suite "stage 1":
