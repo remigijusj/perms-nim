@@ -62,6 +62,16 @@ suite "permbase":
     check(base[3].perm.inverse == base[0].perm)
     check(base[4].perm.inverse == base[2].perm)
 
+  test "isTransitive 0":
+    let data = "A: (1, 2, 4)\nB: (3, 1)"
+    let base = W.parseBase(data)
+    check(base.isTransitive == false)
+
+  test "isTransitive 1":
+    let data = "A: (7, 6, 5, 4)\nB: (4, 3, 2)\nC: (1, 2, 8)"
+    let base = W.parseBase(data)
+    check(base.isTransitive == true)
+
   test "composeSeq":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
     let base = W.parseBase(data)

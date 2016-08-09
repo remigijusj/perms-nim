@@ -63,6 +63,24 @@ proc normalize*(base: PermBase): PermBase =
       result.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
 
 
+proc isTransitive*[N: static[int]](base: PermBase[N]): bool =
+  var members: array[N, int]
+
+  var old_level: seq[int]
+  var new_level: seq[int] = @[0]
+  while new_level.len > 0:
+    swap(new_level, old_level)
+    new_level = @[]
+    for i, x in old_level:
+      for item in base:
+        let y = int(item.perm[x])
+        if members[y] == 0:
+          members[y] = 1
+          new_level.add(y)
+
+  result = not anyIt(members, it == 0)
+
+
 proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
   result = N.identity
   for i in list:

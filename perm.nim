@@ -123,7 +123,7 @@ proc isInvolution*[N: static[int]](p: Perm[N]): bool =
   return true
 
 
-#proc `[]`(p: Perm, x: Point): Point = p[int(x)]
+#proc `[]`*(p: Perm, x: Point): Point = p[int(x)]
 
 
 #proc `$`*(d: Point): string = $(int(d))
