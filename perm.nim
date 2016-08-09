@@ -1,4 +1,7 @@
-import algorithm, math, random, nre, sequtils, strutils
+from algorithm import sort, reverse
+from nre       import re, findAll
+from random    import random, randomize
+from strutils  import parseInt
 
 randomize()
 

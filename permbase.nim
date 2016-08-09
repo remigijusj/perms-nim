@@ -1,5 +1,8 @@
-import perm, algorithm, math, nre, strutils
-from sequtils import mapIt
+import perm, nre
+from algorithm import reverse
+from math      import ceil, ln
+from sequtils  import mapIt, anyIt
+from strutils  import splitLines, `%`
 
 var debug = isMainModule
 
@@ -28,11 +31,15 @@ proc printBase*(base: PermBase): string =
     result.add "$#: $#" % [item.name, printCycles(item.perm)]
 
 
-proc randomBase*(N: static[int], size: int): PermBase[N] =
+proc randomBase*(N: static[int], size: int; dist = true): PermBase[N] =
   result = newSeq[BaseItem[N]](size)
   for i in 0 .. <size:
     let name = $('A'.succ(i))
-    result[i] = (name, N.randomPerm, -1)
+    var perm = N.randomPerm
+    if dist:
+      while anyIt(result[0..i-1], it.perm == perm):
+        perm = N.randomPerm
+    result[i] = (name, perm, -1)
 
 
 proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
@@ -90,7 +97,7 @@ iterator multiply*[N: static[int]](list: seq[Perm[N]], base: PermBase[N]): tuple
         yield (p * it.perm, k)
 
 
-iterator multiSearch[N: static[int]](base: PermBase[N], levels: int): tuple[p: Perm[N]; i, level: int] =
+iterator multiSearch*[N: static[int]](base: PermBase[N], levels: int): tuple[p: Perm[N]; i, level: int] =
   let k = base.len
   var list: seq[Perm[N]] = @[N.identity]
 

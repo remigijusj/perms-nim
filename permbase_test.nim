@@ -1,4 +1,5 @@
-import sequtils, perm, permbase, unittest
+import perm, permbase, unittest
+from sequtils import mapIt, deduplicate
 
 const W = 8
 
