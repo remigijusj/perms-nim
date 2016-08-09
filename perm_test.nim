@@ -21,12 +21,12 @@ suite "constructors":
       p = W.newPerm(@[3, 2, 3])
 
   test "identity valid":
-    let p = W.identity()
+    let p = W.identity
     check(p.len == 8)
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "randomPerm":
-    let p = W.randomPerm()
+    let p = W.randomPerm
     check(p.len == 8)
 
   test "toPerm 0":
@@ -35,7 +35,7 @@ suite "constructors":
 
   test "toPerm 1":
     let c = W.newCycle(@[3])
-    check(c.toPerm == W.identity())
+    check(c.toPerm == W.identity)
 
 
 suite "basics":
@@ -132,7 +132,7 @@ suite "actions":
   test "compose 1":
     let p = W.newPerm(@[1, 2, 0])
     let q = W.newPerm(@[0, 3, 4, 1, 2])
-    let i = W.identity()
+    let i = W.identity
     check(compose(p, i, q) == [3, 4, 0, 1, 2, 5, 6, 7])
     check(compose(p, q, i) == [3, 4, 0, 1, 2, 5, 6, 7])
     check(compose(@[p, q, i]) == [3, 4, 0, 1, 2, 5, 6, 7])
@@ -144,13 +144,13 @@ suite "actions":
 
 
   test "conjugate 0":
-    let p = W.identity()
-    let q = W.randomPerm()
+    let p = W.identity
+    let q = W.randomPerm
     check(p.conjugate(q).isIdentity == true)
 
   test "conjugate 0a":
-    let p = W.randomPerm()
-    let q = W.identity()
+    let p = W.randomPerm
+    let q = W.identity
     check(p.conjugate(q) == p)
 
   test "conjugate 1":
@@ -180,7 +180,7 @@ suite "actions":
 
   test "conjugate c2":
     let c = W.newCycle(@[0, 4, 7])
-    let q = W.randomPerm()
+    let q = W.randomPerm
     check(c.conjugate(q).toPerm == c.toPerm.conjugate(q))
 
 
@@ -316,7 +316,7 @@ suite "cycles":
     check(p.printCycles == "()")
 
   test "printCycles 3":
-    let p = W.identity()
+    let p = W.identity
     check(p.cycles[0].len == 0)
     check(p.printCycles == "()")
 
