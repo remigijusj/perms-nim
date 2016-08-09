@@ -1,4 +1,4 @@
-import perm, permbase
+import "../perm", "../permbase"
 
 const W = 8
 
