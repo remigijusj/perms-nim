@@ -29,13 +29,18 @@ suite "constructors":
     let p = W.randomPerm
     check(p.len == 8)
 
+  test "randomCycle":
+    let c = W.randomCycle(6)
+    check(c.len == 6)
+    check(c.toPerm.signature[6] == 1)
+
   test "toPerm 0":
     let c = W.newCycle(@[1, 2, 3])
     check(c.toPerm == [0, 2, 3, 1, 4, 5, 6, 7])
 
   test "toPerm 1":
-    let c = W.newCycle(@[3])
-    check(c.toPerm == W.identity)
+    expect PermError:
+      discard W.newCycle(@[3])
 
 
 suite "basics":

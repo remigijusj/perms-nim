@@ -63,9 +63,10 @@ proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
 
 
 proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
+  if data.len > N or data.len < 2:
+    raise PermError.newException("seq length is invalid")
+ 
   result = newSeq[Point](data.len)
-  if data.len > N:
-    raise PermError.newException("seq length mismatch")
   for i in 0 .. <data.len:
     result[i] = Point(data[i])
 
@@ -77,11 +78,28 @@ proc identity*(N: static[int]): Perm[N] =
     result[i] = Point(i)
 
 
+# Knuth shuffle
 proc randomPerm*(N: static[int]): Perm[N] =
   result = N.identity
   for i in countdown(result.high, 0):
-    let j = random(i + 1)
+    let j = random(i+1)
     swap(result[i], result[j])
+
+
+# Sattolo algorithm
+proc randomCycle*(N: static[int], size: int): Cycle[N] =
+  if size > N or size < 2:
+    raise PermError.newException("size is invalid")
+
+  result = newSeq[Point](size)
+  for i in 1 .. size:
+    result[i-1] = Point(i)
+
+  for i in countdown(result.high, 1):
+    let j = random(i)
+    swap(result[i], result[j])
+
+  rotateToMin(result)
 
 
 proc toPerm*[N: static[int]](c: Cycle[N]): Perm[N] =
@@ -242,7 +260,7 @@ proc signature*[N: static[int]](p: Perm[N]): Signature[N] =
 
   # WARNING: unsafe, size matters
   zeroMem(addr(marks), N)
-  zeroMem(addr(sgn), N * 8)
+  zeroMem(addr(sgn), (N+1) * 8)
 
   var m = 0
   while true:
