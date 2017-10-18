@@ -1,5 +1,6 @@
 import perm, permbase, unittest
 from sequtils import mapIt, deduplicate
+from options import get, isNone
 
 const W = 8
 
@@ -17,6 +18,12 @@ suite "permbase":
     check(base[0].name == "A")
     check(base[1].name == "B")
     check(base[2].name == "C")
+
+  test "permByName":
+    let data = "A: (1, 2, 3)\nB: (3, 4)"
+    let base = W.parseBase(data)
+    check(base.permByName("B").get == W.parsePerm("(3, 4)"))
+    check(base.permByName("C").isNone)
 
   test "perms":
     let data = "A: (1, 2, 3)\nB: (3, 4)"

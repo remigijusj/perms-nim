@@ -20,7 +20,8 @@ proc parseBase*(N: static[int], data: string): PermBase[N] =
   result = newSeq[BaseItem[N]]()
   for line in splitLines(data):
     let m = line.match(re"^(\w+):\s+(.+)")
-    result.add((m.get.captures[0], N.parsePerm(m.get.captures[1]), -1))
+    if m.isSome:
+      result.add((m.get.captures[0], N.parsePerm(m.get.captures[1]), -1))
 
 
 proc printBase*(base: PermBase): string =
@@ -40,6 +41,12 @@ proc randomBase*(N: static[int], size: int; dist = true): PermBase[N] =
       while anyIt(result[0..i-1], it.perm == perm):
         perm = N.randomPerm
     result[i] = (name, perm, -1)
+
+
+proc permByName*[N: static[int]](base: PermBase[N], name: string): Option[Perm[N]] =
+  for item in base:
+    if item.name == name:
+      return some(item.perm)
 
 
 proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
