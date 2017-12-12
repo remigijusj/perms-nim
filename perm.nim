@@ -141,12 +141,6 @@ proc isInvolution*[N: static[int]](p: Perm[N]): bool =
   return true
 
 
-#proc `[]`*(p: Perm, x: Point): Point = p[int(x)]
-
-
-#proc `$`*(d: Point): string = $(int(d))
-
-
 proc `$`*(p: Perm): string =
   result = "["
   for i, e in p:
@@ -156,15 +150,10 @@ proc `$`*(p: Perm): string =
   result.add "]"
 
 
-proc `==`*(x: Point, y: Point): bool = int(x) == int(y)
+#proc `[]`*(p: Perm, x: Point): Point = p[int(x)]
 
 
-proc `==`*[N: static[int]](p: Perm[N], q: Perm[N]): bool =
-  for i in 0 .. <N:
-    if p[i] != q[i]:
-      return false
-
-  return true
+#proc `$`*(d: Point): string = $(int(d))
 
 
 proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
@@ -175,7 +164,8 @@ proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
   return true
 
 
-proc `==`*[T](c: Cycle, d: seq[T]): bool =
+# HACK: overloading `==` fails
+proc `===`*[T](c: Cycle, d: seq[T]): bool =
   if c.len != d.len:
     return false
   for i in 0 .. <c.len:
@@ -448,7 +438,7 @@ proc splitCycles2[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
   result = @[]
   for c in p.cycles:
     for j in 1 .. c.high:
-      result.add Cycle(@[c[0], c[j]])
+      result.add @[c[0], c[j]]
 
 
 # certain 3-cycles decomposition
@@ -459,7 +449,7 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
     if c.len mod 2 == 0:
       continue
     for j in countup(1, c.high-1, 2):
-      result.add Cycle(@[c[0], c[j], c[j+1]])
+      result.add @[c[0], c[j], c[j+1]]
 
   # even cycles
   var r: seq[Point]
@@ -468,13 +458,13 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
       continue
     if r.isNil():
       for j in countup(1, c.high-1, 2):
-        result.add Cycle(@[c[0], c[j], c[j+1]])
+        result.add @[c[0], c[j], c[j+1]]
       r = @[c[0], c[c.high]]
     else:
-      result.add Cycle(@[r[0], r[1], c[0]])
-      result.add Cycle(@[r[0], c[1], c[0]])
+      result.add @[r[0], r[1], c[0]]
+      result.add @[r[0], c[1], c[0]]
       for j in countup(2, c.high-1, 2):
-        result.add Cycle(@[c[0], c[j], c[j+1]])
+        result.add @[c[0], c[j], c[j+1]]
       r = nil
 
   if not r.isNil():
