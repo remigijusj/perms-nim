@@ -88,6 +88,7 @@ proc isTransitive*[N: static[int]](base: PermBase[N]): bool =
   result = not anyIt(members, it == 0)
 
 
+# TODO: support negatives by meaning inverse of base item
 proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
   result = N.identity
   for i in list:
@@ -265,3 +266,56 @@ proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false
   let covers = base.coverCycles(seed, cycles)
   # - finalize
   result = calcFactors(base, meta, covers)
+
+
+# breadth-first search to determine the orbit of alpha, and return transversal
+# for each point it gives an optional perm moving alpha to that point
+proc orbitTransversal*[N: static[int]](base: PermBase[N], alpha: int): array[N, Option[Perm[N]]] =
+  var old_level: seq[int]
+  var new_level: seq[int] = @[alpha]
+
+  result[alpha] = some(N.identity)
+
+  while new_level.len > 0:
+    swap(new_level, old_level)
+    new_level = @[]
+    for x in old_level:
+      for item in base:
+        let y = int(item.perm[x])
+        if result[y].isNone:
+          result[y] = some(result[x].get * item.perm)
+          new_level.add(y)
+
+
+# breadth-first search to determine the orbit of alpha, and transversal
+#   for each point it gives:
+#   a tuple (belongs to orbit, index of base element, preimage under that perm)
+proc schreierVector*[N: static[int]](base: PermBase[N], alpha: int): array[N, tuple[orb: bool, idx: int, pre: int]] =
+  var old_level: seq[int]
+  var new_level: seq[int] = @[alpha]
+
+  result[alpha] = (orb: true, idx: -1, pre: -1)
+
+  while new_level.len > 0:
+    swap(new_level, old_level)
+    new_level = @[]
+    for x in old_level:
+      for i, item in base:
+        let y = int(item.perm[x])
+        if not result[y].orb:
+          result[y] = (orb: true, idx: i, pre: x)
+          new_level.add(y)
+
+
+# yields stabilizator generators by Schreier lemma
+# TODO: along with transversal / schreier vector? -> orbitTransversalStabilizer
+# TODO: deduplicate (keep dict)
+iterator stabilizator*[N: static[int]](base: PermBase[N], alpha: int): Perm[N] =
+  let cosetReps = orbitTransversal(base, alpha)
+  for i, rep in cosetReps:
+    if rep.isSome:
+      for item in base:
+        let rep1 = cosetReps[item.perm[i]]
+        let perm = rep.get * item.perm * rep1.get.inverse
+        if not perm.isIdentity:
+          yield perm

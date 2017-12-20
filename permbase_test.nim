@@ -1,6 +1,6 @@
 import perm, permbase, unittest
-from sequtils import mapIt, deduplicate
-from options import get, isNone
+from sequtils import mapIt, deduplicate, toSeq
+from options import get, isNone, none, some
 
 const W = 8
 
@@ -79,6 +79,41 @@ suite "permbase":
     let base = W.parseBase(data)
     check(base.isTransitive == true)
 
+  test "orbitTransversal 1":
+    let data = "A: (1, 2, 3)\nB: (3, 4)"
+    let base = W.parseBase(data)
+    let tree = base.orbitTransversal(1)
+    check(tree[0].get == W.newPerm(@[2, 0, 1]))
+    check(tree[1].get == W.identity)
+    check(tree[2].get == W.newPerm(@[1, 2, 0]))
+    check(tree[3].get == W.newPerm(@[1, 3, 0, 2]))
+    check(tree[4].isNone)
+    check(tree[5].isNone)
+    check(tree[6].isNone)
+    check(tree[7].isNone)
+
+  test "schreierVector 1":
+    let data = "A: (1, 2, 3)\nB: (3, 4)"
+    let base = W.parseBase(data)
+    let tree = base.schreierVector(1)
+    check(tree[0] == (true, 0, 2))
+    check(tree[1] == (true, -1, -1))
+    check(tree[2] == (true, 0, 1))
+    check(tree[3] == (true, 1, 2))
+    check(tree[4] == (false, 0, 0))
+    check(tree[5] == (false, 0, 0))
+    check(tree[6] == (false, 0, 0))
+    check(tree[7] == (false, 0, 0))
+
+  test "stabilizator 1":
+    let data = "A: (1, 2, 3)\nB: (3, 4)"
+    let base = W.parseBase(data)
+    var list = toSeq(base.stabilizator(1))
+    check(list.len == 3)
+    check(list[0].printCycles == "(1, 4)")
+    check(list[1].printCycles == "(3, 4)")
+    check(list[2].printCycles == "(1, 4, 3)")
+
   test "composeSeq":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
     let base = W.parseBase(data)
@@ -148,9 +183,7 @@ suite "stage 2":
     var seed = W.parsePerm("(1, 4)(2, 3)").cycles
     check(seed[0] == W.newCycle(@[0, 3]))
     check(seed[1] == W.newCycle(@[1, 2]))
-    var list = newSeq[tuple[c: Cycle[W]; i, j: int]]()
-    for c, i, j in seed.conjugate(base):
-      list.add((c, i, j))
+    var list = toSeq(seed.conjugate(base))
     check(list.len == 4)
     check(list[0] == (W.newCycle(@[1, 3]), 0, 0))
     check(list[1] == (W.newCycle(@[0, 2]), 0, 1))
