@@ -5,15 +5,15 @@ from strutils  import parseInt
 
 randomize()
 
-type World* = int
+# TODO: distinct
 
-type Point* = uint8 # TODO: static
+type Point* = uint8
 
-type Perm*[N: static[int]] = array[N, Point]
+type Perm* = seq[Point]
 
-type Cycle*[N: static[int]] = seq[Point]
+type Cycle* = seq[Point]
 
-type Signature*[N: static[int]] = array[N+1, int]
+type Signature* = seq[int] # <<< uint?
 
 type PermError* = object of Exception
 
@@ -51,9 +51,11 @@ proc rotateToMin[T](list: var seq[T]) =
 
 # ------ constructors ------
 
-proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
+proc newPerm*(N: int, data: seq[int]): Perm =
   if data.len > N:
     raise PermError.newException("seq length mismatch")
+
+  result = newSeq[Point](N)
   for i in 0 .. <data.len:
     result[i] = Point(data[i])
   for i in data.len .. <N:
@@ -62,7 +64,7 @@ proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
     raise PermError.newException("seq invalid")
 
 
-proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
+proc newCycle*(N: int, data: seq[int]): Cycle =
   if data.len > N or data.len < 2:
     raise PermError.newException("seq length is invalid")
  
@@ -73,13 +75,14 @@ proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
   rotateToMin(result)
 
 
-proc identity*(N: static[int]): Perm[N] =
+proc identity*(N: int): Perm =
+  result = newSeq[Point](N)
   for i in 0 .. <N:
     result[i] = Point(i)
 
 
 # Knuth shuffle
-proc randomPerm*(N: static[int]): Perm[N] =
+proc randomPerm*(N: int): Perm =
   result = N.identity
   for i in countdown(result.high, 0):
     let j = random(i+1)
@@ -87,7 +90,7 @@ proc randomPerm*(N: static[int]): Perm[N] =
 
 
 # Sattolo algorithm
-proc randomCycle*(N: static[int], size: int): Cycle[N] =
+proc randomCycle*(N: int, size: int): Cycle =
   if size > N or size < 2:
     raise PermError.newException("size is invalid")
 
@@ -102,16 +105,16 @@ proc randomCycle*(N: static[int], size: int): Cycle[N] =
   rotateToMin(result)
 
 
-proc toPerm*[N: static[int]](c: Cycle[N]): Perm[N] =
+proc toPerm*(c: Cycle, N: int): Perm =
   result = N.identity
   if c.len < 2:
     return
 
   var point = c[0]
   for i in 1 .. <c.len:
-    result[point] = c[i]
+    result[int(point)] = c[i]
     point = c[i]
-  result[point] = c[0]
+  result[int(point)] = c[0]
 
 
 # ------ basics ------
@@ -133,9 +136,9 @@ proc isIdentity*(p: Perm): bool =
 
 
 # optimized p.inverse == p
-proc isInvolution*[N: static[int]](p: Perm[N]): bool = 
-  for i in 0 .. <N:
-    if p[p[i]] != Point(i):
+proc isInvolution*(p: Perm): bool = 
+  for i in 0 .. <p.len:
+    if p[int(p[i])] != Point(i):
       return false
 
   return true
@@ -156,8 +159,9 @@ proc `$`*(p: Perm): string =
 #proc `$`*(d: Point): string = $(int(d))
 
 
-proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
-  for i in 0 .. <N:
+proc `==`*(p: Perm, q: seq[int]): bool =
+  assert(p.len == q.len)
+  for i in 0 .. <p.len:
     if int(p[i]) != int(q[i]):
       return false
 
@@ -177,51 +181,61 @@ proc `===`*[T](c: Cycle, d: seq[T]): bool =
 
 # ------ actions ------
 
-proc inverse*[N: static[int]](p: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
-    result[p[i]] = Point(i)
+proc inverse*(p: Perm): Perm =
+  result = newSeq[Point](p.len)
+  for i in 0 .. <p.len:
+    result[int(p[i])] = Point(i)
 
 
-proc `*`*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
-    result[i] = q[p[i]]
+proc `*`*(p: Perm, q: Perm): Perm =
+  assert(p.len == q.len)
+  result = newSeq[Point](p.len)
+  for i in 0 .. <p.len:
+    result[i] = q[int(p[i])]
 
 
-proc compose*[N: static[int]](list: varargs[Perm[N]]): Perm[N] =
+proc compose*(list: varargs[Perm]): Perm =
+  assert(list.len > 0)
+  let n = list[0].len
   var p: Point
-  for i in 0 .. <N:
+  result = newSeq[Point](n)
+  for i in 0 .. <n:
     p = Point(i)
     for perm in list:
-      p = perm[p]
+      p = perm[int(p)]
     result[i] = p
 
 
-proc power*[N: static[int]](p: Perm[N], n: int): Perm[N] =
+proc power*(p: Perm, n: int): Perm =
   if n == 0:
-    return N.identity
+    return identity(p.len)
 
   if n < 0:
     return p.inverse.power(-n)
 
-  for i in 0 .. <N:
+  result = newSeq[Point](p.len)
+  for i in 0 .. <p.len:
     var k = Point(i)
     for j in 0 .. <n:
-      k = p[k]
+      k = p[int(k)]
 
     result[i] = k
 
 
-proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
-    var j = q[i]
-    var k = p[i]
+# TODO: overloading?
+proc conjugatePerm*(p: Perm, q: Perm): Perm =
+  assert(p.len == q.len)
+  result = newSeq[Point](p.len)
+  for i in 0 .. <p.len:
+    var j = int(q[i])
+    var k = int(p[i])
     result[j] = q[k]
 
 
-proc conjugate*[N: static[int]](c: Cycle[N], q: Perm[N]): Cycle[N] =
+proc conjugate*(c: Cycle, q: Perm): Cycle =
   result = newSeq[Point](c.len)
   for i in 0 .. <c.len:
-    result[i] = q[c[i]]
+    result[i] = q[int(c[i])]
 
   rotateToMin(result)
 
@@ -244,21 +258,17 @@ proc lcm(a, b: auto): auto =
   a * (b div gcd(a, b))
 
 
-proc signature*[N: static[int]](p: Perm[N]): Signature[N] =
-  var marks {.global.}: array[N, bool]
-  var sgn {.global.}: array[N+1, int]
-
-  # WARNING: unsafe, size matters
-  zeroMem(addr(marks), N)
-  zeroMem(addr(sgn), (N+1) * 8)
+proc signature*(p: Perm): Signature =
+  var marks = newSeq[bool](p.len)
+  var sgn = newSeq[int](p.len+1)
 
   var m = 0
   while true:
     # find next unmarked
-    while m < N and marks[m]:
+    while m < p.len and marks[m]:
       inc(m)
 
-    if m == N:
+    if m == p.len:
       break
 
     # trace a cycle
@@ -274,9 +284,9 @@ proc signature*[N: static[int]](p: Perm[N]): Signature[N] =
   result = sgn
 
 
-proc signFrom[N: static[int]](sgn: Signature[N]): int {.noSideEffect.} =
+proc signFrom(sgn: Signature): int {.noSideEffect.} =
   var sum = 0
-  for i in countup(2, N, 2):
+  for i in countup(2, sgn.len-1, 2):
     sum += sgn[i]
 
   if sum %% 2 == 0:
@@ -294,9 +304,9 @@ proc orderFrom(sgn: Signature, max = 0): int {.noSideEffect.} =
         return -1
 
 
-proc orderToCycleFrom[N: static[int]](sgn: Signature[N], n: int, max = 0): int {.noSideEffect.} =
+proc orderToCycleFrom(sgn: Signature, n: int, max = 0): int {.noSideEffect.} =
   # there must be unique n-cycle
-  if n > N or sgn[n] != 1:
+  if n > sgn.len-1 or sgn[n] != 1:
     return -1
 
   result = 1
@@ -330,7 +340,7 @@ proc orderToCycle*(p: Perm, n: int, max = 0): int =
 
 # scan integers, liberally
 # ex: (1 2)(3, 8)(7 4)() -> []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1}
-proc scanCycleRep(N: static[int], data: string): seq[int] =
+proc scanCycleRep(N: int, data: string): seq[int] =
   result = newSeq[int]()
   for item in data.findAll(re"\d+|[();]+"):
     var part: int
@@ -355,7 +365,7 @@ proc scanCycleRep(N: static[int], data: string): seq[int] =
 
 # build permutation
 # ex: []int{-1, 0, 1, -1, 2, 7, -1, 6, 3, -1} -> []Pt{1, 0, 7, 6, 4, 5, 3, 2}
-proc buildPermFromCycleRep(N: static[int], parts: seq[int]): Perm[N] =
+proc buildPermFromCycleRep(N: int, parts: seq[int]): Perm =
   var perm = N.identity
 
   var first = -1
@@ -383,19 +393,19 @@ proc buildPermFromCycleRep(N: static[int], parts: seq[int]): Perm[N] =
   return perm
 
 
-proc parsePerm*(N: static[int], data: string): Perm[N] =
+proc parsePerm*(N: int, data: string): Perm =
   N.buildPermFromCycleRep(N.scanCycleRep(data))
 
 
-proc cycles*[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
+proc cycles*(p: Perm): seq[Cycle] =
   var cycles = newSeq[seq[Point]]()
-  var marks: array[N, bool]
+  var marks = newSeq[bool](p.len)
   var m = 0
   while true:
     # find next unmarked
-    while m < N and marks[m]:
+    while m < p.len and marks[m]:
       inc(m)
-    if m == N:
+    if m == p.len:
       break
 
     # construct a cycle
@@ -434,7 +444,7 @@ proc printCycles*(p: Perm): string =
 
 
 # canonical star decomposition
-proc splitCycles2[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
+proc splitCycles2(p: Perm): seq[Cycle] =
   result = @[]
   for c in p.cycles:
     for j in 1 .. c.high:
@@ -442,7 +452,7 @@ proc splitCycles2[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
 
 
 # certain 3-cycles decomposition
-proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
+proc splitCycles3(p: Perm): seq[Cycle] =
   result = @[]
   # odd cycles
   for c in p.cycles:
@@ -472,7 +482,7 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
 
 
 # proxy wrapper
-proc splitCycles*[N: static[int]](p: Perm[N], length: int): seq[Cycle[N]] =
+proc splitCycles*(p: Perm, length: int): seq[Cycle] =
   if length == 2:
     return splitCycles2(p)
   elif length == 3:

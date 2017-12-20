@@ -6,7 +6,6 @@ import nre, tables
 from strutils import splitLines
 
 const W = 48
-discard newSeq[Perm[W]](0) # hack to ensure necessary static types
 
 
 # -------- encoding by faces --------

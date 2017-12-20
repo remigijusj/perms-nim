@@ -3,8 +3,6 @@ from random import randomize
 
 const W = 8
 
-discard newSeq[Perm[W]](0) # ~~~
-
 debug = false
 
 proc rnd(seed: int): void =

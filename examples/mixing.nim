@@ -6,10 +6,9 @@ const W = 9 # world
 const Size = 2
 const Depth = 10
 
-discard newSeq[Perm[W]](0) # ~~~
 
 
-proc search(base: PermBase[W], levels = 0): tuple[move: int, perm: Perm[W]] =
+proc search(base: PermBase, levels = 0): tuple[move: int, perm: Perm] =
   # let length = (5 + base.sign) div 2 # 2 or 3
   result = (W, W.identity)
 

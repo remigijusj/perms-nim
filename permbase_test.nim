@@ -8,16 +8,18 @@ suite "permbase":
   test "basics":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = W.parseBase(data)
+    check(base.deg == W)
     check(base.sign == -1)
-    check(base.len == 2)
+    check(base.list.len == 2)
     check(base.printBase == data)
 
   test "random":
     let base = W.randomBase(3)
-    check(base.len == 3)
-    check(base[0].name == "A")
-    check(base[1].name == "B")
-    check(base[2].name == "C")
+    check(base.deg == W)
+    check(base.list.len == 3)
+    check(base.list[0].name == "A")
+    check(base.list[1].name == "B")
+    check(base.list[2].name == "C")
 
   test "permByName":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
@@ -43,31 +45,34 @@ suite "permbase":
   test "normalize 0":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = W.parseBase(data).normalize
+    check(base.deg == W)
     check(base.sign == -1)
-    check(base.len == 3)
-    check(base[2].name == "A'")
-    check(base[2].inverse == 0)
+    check(base.list.len == 3)
+    check(base.list[2].name == "A'")
+    check(base.list[2].inverse == 0)
 
   test "normalize 1":
     let data = "A: (1, 2)\nB: (3, 4)"
     let base = W.parseBase(data).normalize
-    check(base.len == 2)
-    check(base[0].inverse == 0)
-    check(base[1].inverse == 1)
+    check(base.deg == W)
+    check(base.list.len == 2)
+    check(base.list[0].inverse == 0)
+    check(base.list[1].inverse == 1)
 
   test "normalize 2":
     let data = "A: (1, 2, 4)\nB: (3, 1)\nX: (5, 4, 3, 2, 1)"
     let base = W.parseBase(data).normalize
-    check(base.len == 5)
-    check(base[0].inverse == 3)
-    check(base[1].inverse == 1)
-    check(base[2].inverse == 4)
-    check(base[3].inverse == 0)
-    check(base[4].inverse == 2)
-    check(base[3].name == "A'")
-    check(base[4].name == "X'")
-    check(base[3].perm.inverse == base[0].perm)
-    check(base[4].perm.inverse == base[2].perm)
+    check(base.deg == W)
+    check(base.list.len == 5)
+    check(base.list[0].inverse == 3)
+    check(base.list[1].inverse == 1)
+    check(base.list[2].inverse == 4)
+    check(base.list[3].inverse == 0)
+    check(base.list[4].inverse == 2)
+    check(base.list[3].name == "A'")
+    check(base.list[4].name == "X'")
+    check(base.list[3].perm.inverse == base.list[0].perm)
+    check(base.list[4].perm.inverse == base.list[2].perm)
 
   test "isTransitive 0":
     let data = "A: (1, 2, 4)\nB: (3, 1)"
@@ -118,10 +123,10 @@ suite "permbase":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
     let base = W.parseBase(data)
     check(base.composeSeq(newSeq[int]()) == W.identity)
-    check(base.composeSeq(@[0]) == base[0].perm)
-    check(base.composeSeq(@[1]) == base[1].perm)
-    check(base.composeSeq(@[0, 1, 0]) == [0, 1, 2, 7, 3, 4, 5, 6])
-    check(base.composeSeq(@[1, 0, 1]) == [6, 5, 0, 4, 7, 3, 2, 1])
+    check(base.composeSeq(@[0]) == base.list[0].perm)
+    check(base.composeSeq(@[1]) == base.list[1].perm)
+    check(base.composeSeq(@[0, 1, 0]) == @[0, 1, 2, 7, 3, 4, 5, 6])
+    check(base.composeSeq(@[1, 0, 1]) == @[6, 5, 0, 4, 7, 3, 2, 1])
 
   test "factorNames":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
@@ -138,7 +143,7 @@ suite "stage 1":
   test "multiply":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let base = W.parseBase(data)
-    var list = newSeq[Perm[W]](4)
+    var list = newSeq[Perm](4)
     for perm, i in base.perms.multiply(base):
       list[i] = perm
     check(list[0].printCycles == "(1, 3, 2)")

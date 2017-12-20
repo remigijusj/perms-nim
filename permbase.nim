@@ -6,55 +6,59 @@ from strutils  import join, splitLines, `%`
 
 var debug* {.global.} = false
 
-type BaseItem[N: static[int]] = tuple
+type BaseItem = tuple
   name: string
-  perm: Perm[N]
+  perm: Perm
   inverse: int
 
-type PermBase*[N: static[int]] = seq[BaseItem[N]]
+type PermBase* = tuple
+  deg: int
+  list: seq[BaseItem]
 
 type FactorizeError* = object of Exception
 
 
-proc parseBase*(N: static[int], data: string): PermBase[N] =
-  result = newSeq[BaseItem[N]]()
+proc parseBase*(N: int, data: string): PermBase =
+  result.deg = N
+  result.list = newSeq[BaseItem]()
   for line in splitLines(data):
     let m = line.match(re"^(\w+):\s+(.+)")
     if m.isSome:
-      result.add((m.get.captures[0], N.parsePerm(m.get.captures[1]), -1))
+      result.list.add((m.get.captures[0], N.parsePerm(m.get.captures[1]), -1))
 
 
 proc printBase*(base: PermBase): string =
   result = ""
-  for i, item in base:
+  for i, item in base.list:
     if i > 0:
       result.add "\n"
     result.add "$#: $#" % [item.name, printCycles(item.perm)]
 
 
-proc randomBase*(N: static[int], size: int; dist = true): PermBase[N] =
-  result = newSeq[BaseItem[N]](size)
+proc randomBase*(N: int, size: int; dist = true): PermBase =
+  result.deg = N
+  result.list = newSeq[BaseItem](size)
   for i in 0 .. <size:
     let name = $('A'.succ(i))
     var perm = N.randomPerm
     if dist:
-      while anyIt(result[0..i-1], it.perm == perm):
+      while anyIt(result.list[0..i-1], it.perm == perm):
         perm = N.randomPerm
-    result[i] = (name, perm, -1)
+    result.list[i] = (name, perm, -1)
 
 
-proc permByName*[N: static[int]](base: PermBase[N], name: string): Option[Perm[N]] =
-  for item in base:
+proc permByName*(base: PermBase, name: string): Option[Perm] =
+  for item in base.list:
     if item.name == name:
       return some(item.perm)
 
 
-proc perms*[N: static[int]](base: PermBase[N]): seq[Perm[N]] =
-  result = base.mapIt(it.perm)
+proc perms*(base: PermBase): seq[Perm] =
+  result = base.list.mapIt(it.perm)
 
 
 proc sign*(base: PermBase): int =
-  for item in base:
+  for item in base.list:
     if item.perm.sign == -1:
       return -1
   return 1
@@ -62,16 +66,17 @@ proc sign*(base: PermBase): int =
 
 proc normalize*(base: PermBase): PermBase =
   result = base
-  for i, item in base:
+  for i, item in base.list:
     if item.perm.isInvolution:
-      result[i].inverse = i
+      result.list[i].inverse = i
     else:
-      result[i].inverse = result.len
-      result.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
+      result.list[i].inverse = result.list.len
+      result.list.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
 
 
-proc isTransitive*[N: static[int]](base: PermBase[N]): bool =
-  var members: array[N, int]
+proc isTransitive*(base: PermBase): bool =
+  let N = base.deg
+  var members = newSeq[int](N)
 
   var old_level: seq[int]
   var new_level: seq[int] = @[0]
@@ -79,7 +84,7 @@ proc isTransitive*[N: static[int]](base: PermBase[N]): bool =
     swap(new_level, old_level)
     new_level = @[]
     for i, x in old_level:
-      for item in base:
+      for item in base.list:
         let y = int(item.perm[x])
         if members[y] == 0:
           members[y] = 1
@@ -89,10 +94,11 @@ proc isTransitive*[N: static[int]](base: PermBase[N]): bool =
 
 
 # TODO: support negatives by meaning inverse of base item
-proc composeSeq*[N: static[int]](base: PermBase[N], list: seq[int]): Perm[N] =
+proc composeSeq*(base: PermBase, list: seq[int]): Perm =
+  let N = base.deg
   result = N.identity
   for i in list:
-    result = result * base[i].perm
+    result = result * base.list[i].perm
 
 
 # warning: assumes list does not start with -1
@@ -113,11 +119,11 @@ proc grouped(list: seq[int]): seq[tuple[n: int, s: string]] =
   result.add((n: prev, s: suffix))
 
 
-proc factorNames*[N: static[int]](base: PermBase[N], list: seq[int], sep = "", concise = false): string =
+proc factorNames*(base: PermBase, list: seq[int], sep = "", concise = false): string =
   if concise:
-    result = grouped(list).mapIt(base[it.n].name & it.s).join(sep)
+    result = grouped(list).mapIt(base.list[it.n].name & it.s).join(sep)
   else:
-    result = list.mapIt(base[it].name).join(sep)
+    result = list.mapIt(base.list[it].name).join(sep)
 
 
 proc decompose(i, level, k: int): seq[int] =
@@ -128,11 +134,11 @@ proc decompose(i, level, k: int): seq[int] =
     val = val div k
 
 
-iterator multiply*[N: static[int]](list: seq[Perm[N]], base: PermBase[N]): tuple[p: Perm[N], k: int] =
-  let n = base.len
+iterator multiply*(list: seq[Perm], base: PermBase): tuple[p: Perm, k: int] =
+  let n = base.list.len
   var k: int
   for i, p in list:
-    for j, it in base:
+    for j, it in base.list:
       k = i * n + j
       if p.isZero:
         yield (p, k)
@@ -140,13 +146,14 @@ iterator multiply*[N: static[int]](list: seq[Perm[N]], base: PermBase[N]): tuple
         yield (p * it.perm, k)
 
 
-iterator multiSearch*[N: static[int]](base: PermBase[N], levels: int): tuple[p: Perm[N]; i, level: int] =
-  let k = base.len
-  var list: seq[Perm[N]] = @[N.identity]
+iterator multiSearch*(base: PermBase, levels: int): tuple[p: Perm; i, level: int] =
+  let k = base.list.len
+  let N = base.deg
+  var list: seq[Perm] = @[N.identity]
 
   for level in 1 .. levels:
     if debug: echo "--- ", level
-    var mult = newSeq[Perm[N]](list.len * k)
+    var mult = newSeq[Perm](list.len * k)
     for p, i in list.multiply(base):
       if p.isZero or p.isIdentity:
         continue
@@ -156,7 +163,7 @@ iterator multiSearch*[N: static[int]](base: PermBase[N], levels: int): tuple[p: 
     swap(list, mult)
 
 
-proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle[N]], s: seq[seq[int]]] =
+proc searchCycle*(base: PermBase; target, levels: int; max = 0; full = false): tuple[c: seq[Cycle], s: seq[seq[int]]] =
   result.c = @[]
   result.s = @[]
   for p, i, level in base.multiSearch(levels):
@@ -164,7 +171,7 @@ proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 
     if o > -1:
       let c = p.power(o).cycles[0]
       if not result.c.contains(c):
-        var s = decompose(i, level, base.len)
+        var s = decompose(i, level, base.list.len)
         s.add(o) # push residual order on top
         result.c.add(c)
         result.s.add(s)
@@ -174,7 +181,7 @@ proc searchCycle*[N: static[int]](base: PermBase[N]; target, levels: int; max = 
 
 iterator conjugate*(list: seq[Cycle], base: PermBase): tuple[c: Cycle; i, j: int] =
   for i, c in list:
-    for j, it in base:
+    for j, it in base.list:
       yield (conjugate(c, it.perm), i, j)
 
 
@@ -239,7 +246,7 @@ proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
   result = newSeq[int]()
   for cov in covers:
     for k in countdown(cov.high, 1):
-      result.add(base[cov[k]].inverse)
+      result.add(base.list[cov[k]].inverse)
 
     let root = meta[cov[0]]
     let times = root[root.high]
@@ -251,11 +258,12 @@ proc calcFactors(base: PermBase; meta, covers: seq[seq[int]]): seq[int] =
       result.add(cov[k])
 
 
-proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false, minlevels = 0): seq[int] =
+proc factorize*(base: PermBase, target: Perm, full = false, minlevels = 0): seq[int] =
+  let N = base.deg
   # - stage 0
   let sign = base.sign
   let length = (5 + sign) div 2 # 2 or 3
-  let levels = max(minlevels, nextPowerOver(base.len, N*N))
+  let levels = max(minlevels, nextPowerOver(base.list.len, N*N))
   # - stage 1
   let (seed, meta) = base.searchCycle(length, levels, N, full)
   if debug: echo("SEED: ", seed, "\nMETA: ", meta)
@@ -270,17 +278,19 @@ proc factorize*[N: static[int]](base: PermBase[N], target: Perm[N], full = false
 
 # breadth-first search to determine the orbit of alpha, and return transversal
 # for each point it gives an optional perm moving alpha to that point
-proc orbitTransversal*[N: static[int]](base: PermBase[N], alpha: int): array[N, Option[Perm[N]]] =
+proc orbitTransversal*(base: PermBase, alpha: int): seq[Option[Perm]] =
   var old_level: seq[int]
   var new_level: seq[int] = @[alpha]
 
+  let N = base.deg
+  result = newSeq[Option[Perm]](N)
   result[alpha] = some(N.identity)
 
   while new_level.len > 0:
     swap(new_level, old_level)
     new_level = @[]
     for x in old_level:
-      for item in base:
+      for item in base.list:
         let y = int(item.perm[x])
         if result[y].isNone:
           result[y] = some(result[x].get * item.perm)
@@ -290,17 +300,19 @@ proc orbitTransversal*[N: static[int]](base: PermBase[N], alpha: int): array[N, 
 # breadth-first search to determine the orbit of alpha, and transversal
 #   for each point it gives:
 #   a tuple (belongs to orbit, index of base element, preimage under that perm)
-proc schreierVector*[N: static[int]](base: PermBase[N], alpha: int): array[N, tuple[orb: bool, idx: int, pre: int]] =
+proc schreierVector*(base: PermBase, alpha: int): seq[tuple[orb: bool, idx: int, pre: int]] =
   var old_level: seq[int]
   var new_level: seq[int] = @[alpha]
 
+  let N = base.deg
+  result = newSeq[tuple[orb: bool, idx: int, pre: int]](N)
   result[alpha] = (orb: true, idx: -1, pre: -1)
 
   while new_level.len > 0:
     swap(new_level, old_level)
     new_level = @[]
     for x in old_level:
-      for i, item in base:
+      for i, item in base.list:
         let y = int(item.perm[x])
         if not result[y].orb:
           result[y] = (orb: true, idx: i, pre: x)
@@ -310,12 +322,12 @@ proc schreierVector*[N: static[int]](base: PermBase[N], alpha: int): array[N, tu
 # yields stabilizator generators by Schreier lemma
 # TODO: along with transversal / schreier vector? -> orbitTransversalStabilizer
 # TODO: deduplicate (keep dict)
-iterator stabilizator*[N: static[int]](base: PermBase[N], alpha: int): Perm[N] =
+iterator stabilizator*(base: PermBase, alpha: int): Perm =
   let cosetReps = orbitTransversal(base, alpha)
   for i, rep in cosetReps:
     if rep.isSome:
-      for item in base:
-        let rep1 = cosetReps[item.perm[i]]
+      for item in base.list:
+        let rep1 = cosetReps[int(item.perm[i])]
         let perm = rep.get * item.perm * rep1.get.inverse
         if not perm.isIdentity:
           yield perm
