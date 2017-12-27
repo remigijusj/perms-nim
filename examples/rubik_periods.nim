@@ -9,6 +9,7 @@ const W = 48
 discard newSeq[Perm[W]](0) # hack to ensure necessary static types
 
 
+# Rubik cube
 # -------- encoding by faces --------
 #              1  2  3
 #              4  U  5
@@ -32,6 +33,7 @@ R: (25 27 32 30)(26 29 31 28)(19 3 38 43)(21 5 36 45)(24 8 33 48)
 """
 
 
+# Print the period of a Rubik permutation given a sequence of moves in standard format.
 proc printPeriod(input: string): void =
   let rubik = W.parseBase(Rubik)
   var perm = W.identity
@@ -49,3 +51,5 @@ proc printPeriod(input: string): void =
 printPeriod "R"
 printPeriod "R F2 L' U D B2"
 printPeriod "R' F2 B F B F2 L' U F2 D R2 L R' B L B2 R U"
+
+# 4, 18, 36

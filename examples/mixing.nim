@@ -2,13 +2,16 @@ import "../perm", "../permbase"
 from random import randomize
 from strutils import repeat
 
-const W = 9 # world
-const Size = 2
-const Depth = 10
+const W = 9 # degree of perms
+const Size = 2 # size of the base
+const Depth = 10 # depth of search
 
 discard newSeq[Perm[W]](0) # ~~~
 
 
+# Record the lowest number of moving points (largest # of stabilized points)
+# when doing branching multiplication of base perms up to specified level.
+# Return the number of moving points and the perm realising that number.
 proc search(base: PermBase[W], levels = 0): tuple[move: int, perm: Perm[W]] =
   # let length = (5 + base.sign) div 2 # 2 or 3
   result = (W, W.identity)
@@ -21,6 +24,7 @@ proc search(base: PermBase[W], levels = 0): tuple[move: int, perm: Perm[W]] =
       result = (move, perm)
 
 
+# Perform the above procedure on random base (given random seed) upto specified depth.
 proc rnd(seed: int, depth: int): void =
   randomize(seed)
   let base = W.randomBase(Size)
@@ -29,36 +33,42 @@ proc rnd(seed: int, depth: int): void =
   echo "move: ", opti.move, ", perm: ", opti.perm.printCycles
 
 
-proc distro(max: int, depth: int): array[W+1, int] =
-  for seed in countup(1, max):
+# Calc distribution of lowest number of moving points,
+# performing the search on random bases for given number of times upto sepcified depth.  
+proc distro(times: int, depth: int): array[W+1, int] =
+  for seed in 1 .. times:
     randomize(seed)
     let base = W.randomBase(Size)
     let opti = base.search(depth)
     result[opti.move].inc
 
 
-proc frequencies(cnt, max: int): void =
-  let freq = distro(cnt, max)
+# Print the above distribution as simple list of probabilities.
+proc frequencies(times, depth: int): void =
+  let freq = distro(times, depth)
   for i, c in freq:
-    echo i, ": ", c / cnt
+    echo i, ": ", c / times
 
-  echo "OK: ", (freq[2]+freq[3])/cnt
+  echo "OK: ", (freq[2]+freq[3])/times
 
 
 proc printf(format: cstring): cint {.importc, varargs, nodecl.}
 
 
-proc mixing(cnt, max: int): void =
+# Print the above distribution as table of percents (integer).
+# Rows are indexed by depth, columns by (lowest) number of moving points found.
+# That is, for each search depth print the percentage distribution.
+proc mixing(times, depth: int): void =
   stdout.write "% |"
-  for k in 2 .. <W+1:
+  for k in 2 .. W:
     discard printf("%4d", k)
   echo "\n--+" & repeat("----", W-1)
 
-  for d in 1 .. <max+1:
+  for d in 1 .. depth:
     discard printf("%1d |", d)
-    let freq = distro(cnt, d)
-    for i in 2 .. <W+1:
-      discard printf("  %2.0f", (freq[i] / cnt) * 100)
+    let freq = distro(times, d)
+    for i in 2 .. W:
+      discard printf("  %2.0f", (freq[i] / times) * 100)
     echo ""
 
 
@@ -69,6 +79,10 @@ mixing(10000, Depth)
 
 
 #[
+
+Mixing % distributions table for degress 9 downto 5.
+This may produce slightly differing numbers when run repeatedly (+- several %).
+
 
  % |   2   3   4   5   6   7   8   9
 ---+--------------------------------
@@ -95,7 +109,6 @@ mixing(10000, Depth)
  8 |  35  45  17   2   1   0   0
  9 |  41  41  16   1   1   0   0
 10 |  48  42   9   0   1   0   0
-
 
 % |   2   3   4   5   6   7
 --+------------------------
