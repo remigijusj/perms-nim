@@ -4,7 +4,7 @@ const W = 8
 
 suite "constructors":
   test "direct":
-    let p: Perm[W] = [1'u8, 0'u8, 2'u8, 3'u8, 4'u8, 5'u8, 6'u8, 7'u8]
+    let p: Perm[W] = (W, [1'u8, 0'u8, 2'u8, 3'u8, 4'u8, 5'u8, 6'u8, 7'u8])
     check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
   test "newPerm invalid":
@@ -22,17 +22,17 @@ suite "constructors":
 
   test "identity valid":
     let p = W.identity
-    check(p.len == 8)
+    check(p.p.len == 8)
     check(p == [0, 1, 2, 3, 4, 5, 6, 7])
 
   test "randomPerm":
     let p = W.randomPerm
-    check(p.len == 8)
+    check(p.p.len == 8)
 
   test "randomCycle":
     let c = W.randomCycle(6)
-    check(c.len == 6)
-    check(c.toPerm.signature[6] == 1)
+    check(c.c.len == 6)
+    check(c.toPerm.signature.s[6] == 1)
 
   test "toPerm 0":
     let c = W.newCycle(@[1, 2, 3])
@@ -120,7 +120,7 @@ suite "basics":
 
   test "isEqual c1":
     let c = W.newCycle(@[3, 1, 2])
-    check(c === @[1, 2, 3])
+    check(c == @[1, 2, 3])
 
 
 suite "actions":
@@ -171,7 +171,7 @@ suite "actions":
   test "conjugate c0":
     let c = W.newCycle(@[0, 1, 2, 3])
     let q = W.newPerm(@[4, 3, 2, 1, 0])
-    check(c.conjugate(q) === @[1, 4, 3, 2])
+    check(c.conjugate(q) == @[1, 4, 3, 2])
 
   test "conjugate c1":
     let c = W.newCycle(@[0, 1, 2])
@@ -192,39 +192,39 @@ suite "actions":
 suite "signature":
   test "signature 0":
     let p = W.newPerm(@[])
-    check(p.signature == [0, 8, 0, 0, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 8, 0, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 1)
 
   test "signature 1":
     let p = W.newPerm(@[0])
-    check(p.signature == [0, 8, 0, 0, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 8, 0, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 1)
 
   test "signature 2":
     let p = W.newPerm(@[1, 0])
-    check(p.signature == [0, 6, 1, 0, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 6, 1, 0, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 2)
     check(p.orderToCycle(2) == 1)
 
   test "signature 4":
     let p = W.newPerm(@[1, 0, 3, 2])
-    check(p.signature == [0, 4, 2, 0, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 4, 2, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 2)
     check(p.orderToCycle(2) == -1)
 
   test "signature 5a":
     let p = W.newPerm(@[1, 0, 3, 2, 4])
-    check(p.signature == [0, 4, 2, 0, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 4, 2, 0, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 2)
 
   test "signature 5c":
     let p = W.newPerm(@[1, 0, 3, 4, 2])
-    check(p.signature == [0, 3, 1, 1, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 3, 1, 1, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
     check(p.orderToCycle(2) == 3)
@@ -232,26 +232,26 @@ suite "signature":
 
   test "signature 5d":
     let p = W.newPerm(@[0, 1, 3, 4, 2])
-    check(p.signature == [0, 5, 0, 1, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 5, 0, 1, 0, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 3)
     check(p.orderToCycle(3) == 1)
 
   test "signature 6a":
     let p = W.newPerm(@[1, 2, 3, 4, 5, 0])
-    check(p.signature == [0, 2, 0, 0, 0, 0, 1, 0, 0])
+    check(p.signature.s == [0, 2, 0, 0, 0, 0, 1, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
 
   test "signature 6b":
     let p = W.newPerm(@[0, 2, 1, 4, 5, 3])
-    check(p.signature == [0, 3, 1, 1, 0, 0, 0, 0, 0])
+    check(p.signature.s == [0, 3, 1, 1, 0, 0, 0, 0, 0])
     check(p.sign == -1)
     check(p.order == 6)
 
   test "signature 6c":
     let p = W.newPerm(@[5, 4, 1, 2, 3, 0])
-    check(p.signature == [0, 2, 1, 0, 1, 0, 0, 0, 0])
+    check(p.signature.s == [0, 2, 1, 0, 1, 0, 0, 0, 0])
     check(p.sign == 1)
     check(p.order == 4)
     check(p.orderToCycle(4) == -1)
@@ -322,18 +322,18 @@ suite "cycles":
 
   test "printCycles 3":
     let p = W.identity
-    check(p.cycles[0].len == 0)
+    check(p.cycles[0].c.len == 0)
     check(p.printCycles == "()")
 
   test "printCycles 4":
     let p = W.newPerm(@[1, 2, 3, 4, 5, 0])
-    check(p.cycles[0] === @[0, 1, 2, 3, 4, 5])
+    check(p.cycles[0] == @[0, 1, 2, 3, 4, 5])
     check(p.printCycles == "(1, 2, 3, 4, 5, 6)")
 
   test "printCycles 5":
     let p = W.newPerm(@[1, 2, 0, 4, 5, 3])
-    check(p.cycles[0] === @[0, 1, 2])
-    check(p.cycles[1] === @[3, 4, 5])
+    check(p.cycles[0] == @[0, 1, 2])
+    check(p.cycles[1] == @[3, 4, 5])
     check(p.printCycles == "(1, 2, 3)(4, 5, 6)")
 
   test "printCycles 6":
@@ -349,37 +349,37 @@ suite "cycles":
     let p = W.newPerm(@[1, 2, 3, 4, 5, 0])
     let s = @[@[0, 1], @[0, 2], @[0, 3], @[0, 4], @[0, 5]]
     for i, c in p.splitCycles(2):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles2 1":
     let p = W.parsePerm("(1 2)(3 8)(7 4)")
     let s = @[@[0, 1], @[2, 7], @[3, 6]]
     for i, c in p.splitCycles(2):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles2 2":
     let p = W.newPerm(@[1, 2, 0, 4, 5, 3])
     let s = @[@[0, 1], @[0, 2], @[3, 4], @[3, 5]]
     for i, c in p.splitCycles(2):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles3 0":
     let p = W.newPerm(@[1, 2, 0, 4, 5, 3])
     let s = @[@[0, 1, 2], @[3, 4, 5]]
     for i, c in p.splitCycles(3):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles3 1":
     let p = W.parsePerm("(1 2 4 8)(3 5)")
     let s = @[@[0, 1, 3], @[0, 7, 2], @[0, 4, 2]]
     for i, c in p.splitCycles(3):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles3 2":
     let p = W.parsePerm("(1 7)(3 2 6)(5 8)") # [0 6][1 5 2][4 7]
     let s = @[@[1, 5, 2], @[0, 6, 4], @[0, 7, 4]]
     for i, c in p.splitCycles(3):
-      check(c === s[i])
+      check(c == s[i])
 
   test "splitCycles3 3":
     expect PermError:
