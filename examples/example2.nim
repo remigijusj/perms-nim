@@ -1,4 +1,4 @@
-import "../perm", "../permbase"
+import "../permbase"
 from random import randomize
 
 const W = 8

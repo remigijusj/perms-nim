@@ -1,4 +1,4 @@
-import "../perm", "../permbase"
+import "../permbase"
 
 const W = 8
 
@@ -19,7 +19,7 @@ proc test2: void =
   let base = W.parseBase("A: (1 2)(3 4)\nB: (1 3)(2 4)")
   let norm = base.normalize
   let (list, meta) = norm.searchCycle(4, 2)
-  echo (list, meta)
+  echo((list, meta))
   echo "---------"
 
 # Factorize a perm over given base. Verify factorization, print factor names sequence.

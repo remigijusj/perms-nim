@@ -4,6 +4,8 @@ from math      import ceil, ln
 from sequtils  import mapIt, anyIt
 from strutils  import join, splitLines, `%`
 
+export perm
+
 var debug* {.global.} = false
 
 type BaseItem[N: static[int]] = tuple

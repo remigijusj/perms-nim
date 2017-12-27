@@ -1,7 +1,7 @@
 # Solution for Dailyprogrammer [2017-10-18] Challenge #336 [Intermediate] Repetitive Rubik's Cube
 # https://www.reddit.com/r/dailyprogrammer/comments/776lcz/20171018_challenge_336_intermediate_repetitive/
 
-import "../perm", "../permbase"
+import "../permbase"
 import nre, tables
 from strutils import splitLines
 

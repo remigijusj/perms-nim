@@ -1,4 +1,4 @@
-import "../perm", "../permbase"
+import "../permbase"
 from random import randomize
 from strutils import repeat
 

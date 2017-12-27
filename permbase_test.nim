@@ -1,4 +1,4 @@
-import perm, permbase, unittest
+import permbase, unittest
 from sequtils import mapIt, deduplicate, toSeq
 from options import get, isNone, none, some
 
