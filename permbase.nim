@@ -8,7 +8,7 @@ export perm
 
 var debug* {.global.} = false
 
-type BaseItem[N: static[int]] = tuple
+type BaseItem*[N: static[int]] = tuple
   name: string
   perm: Perm[N]
   inverse: int
