@@ -4,7 +4,7 @@ const W = 8
 
 suite "constructors":
   test "direct":
-    let p: Perm[W] = [1'u8, 0'u8, 2'u8, 3'u8, 4'u8, 5'u8, 6'u8, 7'u8]
+    let p: Perm[W] = [1, 0, 2, 3, 4, 5, 6, 7]
     check(p == [1, 0, 2, 3, 4, 5, 6, 7])
 
   test "newPerm invalid":

@@ -5,9 +5,7 @@ from strutils  import parseInt
 
 randomize()
 
-type World* = int
-
-type Point* = uint8 # TODO: static, int
+type Point* = int # WAS: uint8
 
 type Perm*[N: static[int]] = array[N, Point]
 
@@ -150,15 +148,9 @@ proc `$`*(p: Perm): string =
   result.add "]"
 
 
-#proc `[]`*(p: Perm, x: Point): Point = p[int(x)]
-
-
-#proc `$`*(d: Point): string = $(int(d))
-
-
 proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
   for i in 0 .. <N:
-    if int(p[i]) != int(q[i]):
+    if p[i] != q[i]:
       return false
 
   return true
@@ -169,7 +161,7 @@ proc `===`*[T](c: Cycle, d: seq[T]): bool =
   if c.len != d.len:
     return false
   for i in 0 .. <c.len:
-    if int(c[i]) != int(d[i]):
+    if c[i] != d[i]:
       return false
 
   return true
