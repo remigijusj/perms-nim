@@ -1,4 +1,4 @@
-import "../permbase"
+import "../permgroup"
 from random import randomize
 
 const W = 8
@@ -7,7 +7,7 @@ discard newSeq[Perm[W]](0) # ~~~
 
 debug = false
 
-# With a random base and perm, print them, then try to factotize the perm.
+# With a random generating set and perm, print them, then try to factorize the perm.
 # Print various meta-info:
 # - list of factor indices
 # - sequence of factor names
@@ -16,10 +16,10 @@ debug = false
 # - length of factorization
 proc test_factorize(seed: int): void =
   randomize(seed)
-  let base = W.randomBase(3)
+  let gens = W.randomGens(3)
   let perm = W.randomPerm
-  let norm = base.normalize
-  echo base.printBase
+  let norm = gens.normalize
+  echo gens.printGens
   echo "P: ", perm.printCycles
 
   let list = norm.factorize(perm, false, 9)

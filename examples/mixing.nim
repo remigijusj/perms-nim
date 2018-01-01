@@ -1,22 +1,22 @@
-import "../permbase"
+import "../permgroup"
 from random import randomize
 from strutils import repeat
 
 const W = 9 # degree of perms
-const Size = 2 # size of the base
+const Size = 2 # number of generators
 const Depth = 10 # depth of search
 
 discard newSeq[Perm[W]](0) # ~~~
 
 
 # Record the lowest number of moving points (largest # of stabilized points)
-# when doing branching multiplication of base perms up to specified level.
+# when doing branching multiplication of generators up to specified level.
 # Return the number of moving points and the perm realising that number.
-proc search(base: PermBase[W], levels = 0): tuple[move: int, perm: Perm[W]] =
-  # let length = (5 + base.sign) div 2 # 2 or 3
+proc search(gens: GroupGens[W], levels = 0): tuple[move: int, perm: Perm[W]] =
+  # let length = (5 + gens.sign) div 2 # 2 or 3
   result = (W, W.identity)
 
-  for perm, i, level in base.multiSearch(levels):
+  for perm, i, level in gens.multiSearch(levels):
     # let o = p.orderToCycle(length, W)
     # if o > -1:
     let move = W - perm.signature[1]
@@ -24,22 +24,23 @@ proc search(base: PermBase[W], levels = 0): tuple[move: int, perm: Perm[W]] =
       result = (move, perm)
 
 
-# Perform the above procedure on random base (given random seed) upto specified depth.
+# Perform the above procedure on random generators (given random seed) upto specified depth.
 proc rnd(seed: int, depth: int): void =
   randomize(seed)
-  let base = W.randomBase(Size)
-  let opti = base.search(depth)
-  echo base.printBase
+  let gens = W.randomGens(Size)
+  let opti = gens.search(depth)
+  echo gens.printGens
   echo "move: ", opti.move, ", perm: ", opti.perm.printCycles
 
 
 # Calc distribution of lowest number of moving points,
-# performing the search on random bases for given number of times upto sepcified depth.  
+# performing the search on random generating sets 
+# for given number of times upto specified depth.  
 proc distro(times: int, depth: int): array[W+1, int] =
   for seed in 1 .. times:
     randomize(seed)
-    let base = W.randomBase(Size)
-    let opti = base.search(depth)
+    let gens = W.randomGens(Size)
+    let opti = gens.search(depth)
     result[opti.move].inc
 
 

@@ -36,6 +36,10 @@ proc searchMin(gens: GroupGens[W], levels = 0): string =
   for perm, i, level in gens.multiSearch(levels):
     let move = W - perm.signature[1]
     if move < memo.move:
+      echo((move: move, level: level, i: i, perm: perm.printCycles))
+      let idx = decodeIndex(i, level, gens.len)
+      let res = composeSeq(gens, idx).printCycles == perm.printCycles
+      echo((idx: idx, res: res))
       memo = (move, level, perm)
 
   result = "move: $1, level: $2, perm: $3" % [$ memo.move, $ memo.level, memo.perm.printCycles]

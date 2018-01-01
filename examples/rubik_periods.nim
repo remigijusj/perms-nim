@@ -1,7 +1,7 @@
 # Solution for Dailyprogrammer [2017-10-18] Challenge #336 [Intermediate] Repetitive Rubik's Cube
 # https://www.reddit.com/r/dailyprogrammer/comments/776lcz/20171018_challenge_336_intermediate_repetitive/
 
-import "../permbase"
+import "../permgroup"
 import nre, tables
 from strutils import splitLines
 
@@ -35,7 +35,7 @@ R: (25 27 32 30)(26 29 31 28)(19 3 38 43)(21 5 36 45)(24 8 33 48)
 
 # Print the period of a Rubik permutation given a sequence of moves in standard format.
 proc printPeriod(input: string): void =
-  let rubik = W.parseBase(Rubik)
+  let rubik = W.parseGens(Rubik)
   var perm = W.identity
   for item in input.findIter(re"([FBUDLR])(['2])?"):
     var move = rubik.permByName(item.captures[0]).get

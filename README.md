@@ -4,18 +4,18 @@ Permutation group calculations and factorization implemented in Nim.
 `perm` is a library for basic permutation calculations. Various constructors and printing in cycle notation are provided, 
 as well as conjugation, signature and other properties.
 
-`permbase` library implements permutation factorization algorithm described in the paper 
+`permgroup` library implements permutation factorization algorithm described in the paper 
 ["Short expressions of permutations as products and cryptanalysis of the Algebraic Eraser"](https://arxiv.org/abs/0804.0629)
 by Arkadius Kalka et al. 
 
-See test files `perm_test` and `permbase_test` for usage scenarios, also `examples` subdirectory.
+See test files `perm_test` and `permgroup_test` for usage scenarios, also `examples` subdirectory.
 
 ## Algorithm
 
-The implemented algorithm provides generator expressions of length *O(n^2 log n)* in base size n, which is significantly better
+The implemented algorithm provides generator expressions of length *O(n^2 log n)* for n generators, which is significantly better
 than the more well-known algorithms (see Minkwitz and Schreier-Sims). 
 
-The shortcoming of this approach is that factorization can only be successful in case of bases 
+The shortcoming of this approach is that factorization can only be successful in case of sets
 generating full symmetric or alternating group (*S_n* or *A_n*).
 Otherwise an involution or 3-cycle cannot be found in the first stage of algorithm, and exception is raised.
 
@@ -32,6 +32,6 @@ for more information.
 ## Examples
 
 * `mixing.nim` measures average levels in breadth-first search needed to reach permutation with minimum moving points. 
-Some results on size-2 bases are included as comments at the bottom.
+Some results with two generators are included as comments at the bottom.
 It might be helpful for tuning the main factorization algorithm heuristic parameters.
 

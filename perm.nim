@@ -7,7 +7,7 @@ randomize()
 
 type World* = int
 
-type Point* = uint8 # TODO: static
+type Point* = uint8 # TODO: static, int
 
 type Perm*[N: static[int]] = array[N, Point]
 
