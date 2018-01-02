@@ -168,7 +168,9 @@ iterator multiSearch*[N: static[int]](gens: GroupGens[N], levels: int): tuple[p:
   let k = gens.len
   var list: seq[Perm[N]] = @[N.identity]
 
-  for level in 1 .. levels:
+  let max_level = if levels >= 0: levels else: int.high
+
+  for level in 1 .. max_level:
     if debug: echo "--- ", level
     var mult = newSeq[Perm[N]](list.len * k)
     for p, i in list.multiply(gens):
