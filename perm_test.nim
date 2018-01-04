@@ -188,6 +188,21 @@ suite "actions":
     let q = W.randomPerm
     check(c.conjugate(q).toPerm == c.toPerm.conjugate(q))
 
+  test "commutator 0":
+    let p = W.identity
+    let q = W.randomPerm
+    check(p.commutator(q).isIdentity == true)
+
+  test "commutator 1":
+    let p = W.newPerm(@[1, 2, 0])
+    let q = W.newPerm(@[0, 3, 4, 1, 2])
+    check(p.commutator(q) == [2, 3, 1, 4, 0, 5, 6, 7])
+
+  test "commutator 2":
+    let p = W.newPerm(@[4, 2, 0, 1, 3])
+    let q = W.newPerm(@[1, 2, 0])
+    check(p.commutator(q) == [0, 2, 4, 3, 1, 5, 6, 7])
+
 
 suite "signature":
   test "signature 0":

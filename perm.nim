@@ -218,6 +218,10 @@ proc conjugate*[N: static[int]](c: Cycle[N], q: Perm[N]): Cycle[N] =
   rotateToMin(result)
 
 
+proc commutator*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
+  result = p.inverse * q.inverse * p * q
+
+
 # ------ signature ------
 
 proc gcd(a, b: auto): auto =
