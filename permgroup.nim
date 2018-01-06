@@ -1,9 +1,12 @@
 import perm, nre
 
+from random    import random, randomize
 from sequtils  import mapIt, anyIt
 from strutils  import join, splitLines, `%`
 
 export perm
+
+randomize()
 
 var debug* {.global.} = false
 
@@ -231,3 +234,20 @@ iterator stabilizator*[N: static[int]](gens: GroupGens[N], alpha: int): Perm[N] 
         let perm = rep.get * item.perm * rep1.get.inverse
         if not perm.isIdentity:
           yield perm
+
+
+# Make a random element of permutation group using the Product Replacement Algorithm,
+# see p.27 in Seress' book. It is recommended to normalize generators before use.
+proc randomPerm*[N: static[int]](gens: GroupGens[N], iterations: int): Perm[N] =
+  if gens.len < 2:
+    raise Exception.newException("must have at least two generators")
+
+  var base = gens.perms
+  var m, k: int
+  for i in 0 .. <iterations:
+    m = random(base.len)
+    k = random(base.len - 1)
+    if k >= m: k.inc # avoids same element
+    base[m] = base[m] * base[k]    
+
+  result = base[m]

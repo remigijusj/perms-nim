@@ -147,3 +147,9 @@ suite "specific":
     check(list[0].printCycles == "(1, 4)")
     check(list[1].printCycles == "(3, 4)")
     check(list[2].printCycles == "(1, 4, 3)")
+
+  test "randomPerm 0":
+    let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"
+    let gens = W.parseGens(data)
+    let p = randomPerm(gens, 10)
+    check(p.len == 8)
