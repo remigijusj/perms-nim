@@ -149,7 +149,7 @@ iterator multiSearch*[N: static[int]](gens: GroupGens[N], levels: int): tuple[p:
         continue
       yield (p, i, level)
       mult[i] = p
-      # if debug: echo i, ": ", printCycles(p) # BUG: Error: ordinal type expected
+      if debug: echo i, ": ", printCycles(p)
     swap(list, mult)
 
 

@@ -5,7 +5,7 @@ from strutils  import parseInt
 
 randomize()
 
-type Point* = int # WAS: uint8
+type Point* = int16
 
 type Perm*[N: static[int]] = array[N, Point]
 
