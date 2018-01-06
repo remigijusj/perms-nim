@@ -1,4 +1,5 @@
 import "../permgroup"
+
 from random import randomize
 from strutils import repeat
 

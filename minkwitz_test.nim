@@ -40,7 +40,7 @@ suite "minkwitz":
     check(isValidSGS(tt, base))
     if debugM: printInfo(gens, base, tt)
 
-  test "factorization 0":
+  test "factorize 0":
     let data = "A: (1, 2)\nB: (1, 3)\nC: (1, 4)" # S_4, standard
     let gens = W4.parseGens(data).normalize
     let base = @[0, 1, 2]
@@ -51,7 +51,7 @@ suite "minkwitz":
     if debugM: echo "Fact: ", fact, " - ", fact.len
     check(composeSeq(gens, fact) == perm)
 
-  test "factorization 1":
+  test "factorize 1":
     let data = "A: (1, 3, 5, 6)\nB: (1, 3)\nC: (7, 8)"
     let gens = W8.parseGens(data).normalize
     let base = @[0, 1, 2, 3, 4, 5, 6, 7]

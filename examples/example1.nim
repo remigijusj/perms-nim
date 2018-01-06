@@ -1,4 +1,4 @@
-import "../permgroup"
+import "../permgroup", "../kalka"
 
 const W = 8
 
@@ -26,7 +26,7 @@ proc test2: void =
 proc test3: void =
   let gens = W.parseGens("A: (1 2 3 4)(5 6)\nB: (1 3 5)").normalize
   let perm = W.parsePerm("(1 3 5)(2 4 6)")
-  let list = gens.factorize(perm)
+  let list = gens.factorizeK(perm)
   echo gens.composeSeq(list) == perm
   echo gens.factorNames(list)
   echo "---------"

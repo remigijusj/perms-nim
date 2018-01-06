@@ -1,4 +1,5 @@
-import "../permgroup"
+import "../permgroup", "../kalka"
+
 from random import randomize
 
 const W = 8
@@ -22,7 +23,7 @@ proc test_factorize(seed: int): void =
   echo gens.printGens
   echo "P: ", perm.printCycles
 
-  let list = norm.factorize(perm, false, 9)
+  let list = norm.factorizeK(perm, false, 9)
   echo "LIST: ", list
   echo "SEQ: ", norm.factorNames(list)
   echo "CON: ", norm.factorNames(list, "-", true)

@@ -1,5 +1,6 @@
 import "../permgroup"
 import nre
+
 from system import slurp
 from strscans import scanf
 from strutils import splitLines, replace, `%`

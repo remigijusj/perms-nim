@@ -11,6 +11,8 @@ type TransTable*[N: static[int]] = array[N, array[N, Option[PermWord[N]]]]
 # Must be: len < N
 type GroupBase* = seq[Point]
 
+type FactorizeError* = object of Exception
+
 var debugM* {.global.} = false
 
 # Generating set is presumed to be normalized

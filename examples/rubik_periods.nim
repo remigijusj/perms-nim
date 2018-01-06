@@ -3,6 +3,7 @@
 
 import "../permgroup"
 import nre, tables
+
 from strutils import splitLines
 
 const W = 48
