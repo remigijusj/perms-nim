@@ -103,16 +103,6 @@ suite "specific":
     check(list[2] == (W.newCycle(@[0, 2]), 1, 0))
     check(list[3] == (W.newCycle(@[1, 3]), 1, 1))
 
-  test "isTransitive 0":
-    let data = "A: (1, 2, 4)\nB: (3, 1)"
-    let gens = W.parseGens(data)
-    check(gens.isTransitive == false)
-
-  test "isTransitive 1":
-    let data = "A: (7, 6, 5, 4)\nB: (4, 3, 2)\nC: (1, 2, 8)"
-    let gens = W.parseGens(data)
-    check(gens.isTransitive == true)
-
   test "orbitTransversal 1":
     let data = "A: (1, 2, 3)\nB: (3, 4)"
     let gens = W.parseGens(data)
@@ -147,6 +137,16 @@ suite "specific":
     check(list[0].printCycles == "(1, 4)")
     check(list[1].printCycles == "(3, 4)")
     check(list[2].printCycles == "(1, 4, 3)")
+
+  test "isTransitive 0":
+    let data = "A: (1, 2, 4)\nB: (3, 1)"
+    let gens = W.parseGens(data)
+    check(gens.isTransitive == false)
+
+  test "isTransitive 1":
+    let data = "A: (7, 6, 5, 4)\nB: (4, 3, 2)\nC: (1, 2, 8)"
+    let gens = W.parseGens(data)
+    check(gens.isTransitive == true)
 
   test "randomPerm 0":
     let data = "A: (1 8)(2 7)(3 6)(4 5)\nB: (1 2 3 4 5)"

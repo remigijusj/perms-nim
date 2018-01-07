@@ -1,7 +1,7 @@
 import perm, nre
 
 from random    import random, randomize
-from sequtils  import mapIt, anyIt
+from sequtils  import mapIt, anyIt, allIt
 from strutils  import join, splitLines, `%`
 
 export perm
@@ -164,27 +164,8 @@ proc decodeIndex*(index, level, k: int): seq[int] =
     val = val div k
 
 
-# Return true if the generated group is transitive (has single orbit)
-proc isTransitive*[N: static[int]](gens: GroupGens[N]): bool =
-  var members: array[N, int]
-
-  var old_level: seq[int]
-  var new_level: seq[int] = @[0]
-  while new_level.len > 0:
-    swap(new_level, old_level)
-    new_level = @[]
-    for i, x in old_level:
-      for item in gens:
-        let y = int(item.perm[x])
-        if members[y] == 0:
-          members[y] = 1
-          new_level.add(y)
-
-  result = not members.anyIt(it == 0)
-
-
-# Breadth-first search to determine the orbit of point alpha, and return transversal
-# For each point it gives an optional perm moving alpha to that point.
+# Breadth-first search to determine the orbit of point alpha, and return transversal.
+# For each point it gives an optional perm moving alpha to that point: coset representative.
 proc orbitTransversal*[N: static[int]](gens: GroupGens[N], alpha: int): array[N, Option[Perm[N]]] =
   var old_level: seq[int]
   var new_level: seq[int] = @[alpha]
@@ -226,14 +207,19 @@ proc schreierVector*[N: static[int]](gens: GroupGens[N], alpha: int): array[N, t
 # TODO: along with transversal / schreier vector? -> orbitTransversalStabilizer
 # TODO: deduplicate (keep dict)
 iterator stabilizator*[N: static[int]](gens: GroupGens[N], alpha: int): Perm[N] =
-  let cosetReps = orbitTransversal(gens, alpha)
-  for i, rep in cosetReps:
+  let reps = orbitTransversal(gens, alpha)
+  for i, rep in reps:
     if rep.isSome:
       for item in gens:
-        let rep1 = cosetReps[item.perm[i]]
+        let rep1 = reps[item.perm[i]]
         let perm = rep.get * item.perm * rep1.get.inverse
         if not perm.isIdentity:
           yield perm
+
+
+# Return true if the generated group is transitive (has single orbit)
+proc isTransitive*[N: static[int]](gens: GroupGens[N]): bool =
+  result = orbitTransversal(gens, 0).allIt(it.isSome)
 
 
 # Make a random element of permutation group using the Product Replacement Algorithm,
