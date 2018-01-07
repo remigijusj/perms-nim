@@ -3,6 +3,8 @@ import permgroup
 from algorithm import reverse
 from math      import ceil, ln
 
+## Kalka-Teicher-Tsaban algorithm for permutation factorization.
+
 type FactorizeError* = object of Exception
 
 

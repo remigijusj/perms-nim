@@ -3,6 +3,8 @@ import permgroup, options
 from algorithm import reversed 
 from sequtils import mapIt, filterIt
 
+## Minkwitz algorithm for short word transversal system and factorization.
+
 type PermWord[N: static[int]] = tuple[perm: Perm[N], word: seq[int], news: bool]
 
 # Actual dimensions: base.len x N
@@ -164,7 +166,6 @@ proc quality*[N: static[int]](nu: TransTable[N]; base: GroupBase): int =
     result += maxlen
 
 
-# TODO: tests
 proc factorizeM*[N: static[int]](gens: GroupGens[N]; base: GroupBase; nu: TransTable[N]; target: Perm[N]): seq[int] =
   var list = newSeq[int]()
   var perm = target

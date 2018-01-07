@@ -3,6 +3,8 @@ from nre       import re, findAll
 from random    import random, randomize
 from strutils  import parseInt
 
+## Permutation data structures and basic algorithms
+
 randomize()
 
 type Point* = int16
