@@ -12,8 +12,8 @@ const
 
 
 iterator eachEntry[N: static[int]](tt: TransTable[N]): string =
-  for i in 0 .. <N:
-    for j in 0 .. <N:
+  for i in 0 ..< N:
+    for j in 0 ..< N:
       if tt[i][j].isSome:
         yield "$1.$2 -> $3".format(i, j, tt[i][j].get)
 

@@ -105,7 +105,7 @@ proc calcFactors(gens: GroupGens; meta, covers: seq[seq[int]]): seq[int] =
     let root = meta[cov[0]]
     let times = root[root.high]
     for i in 1 .. times:
-      for j in 0 .. <root.high:
+      for j in 0 ..< root.high:
         result.add(root[j])
 
     for k in countup(1, cov.high):

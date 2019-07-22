@@ -38,7 +38,7 @@ R: (25 27 32 30)(26 29 31 28)(19 3 38 43)(21 5 36 45)(24 8 33 48)
 proc printPeriod(input: string): void =
   let rubik = W.parseGens(Rubik)
   var perm = W.identity
-  for item in input.findIter(re"([FBUDLR])(['2])?"):
+  for item in input.findIter(re"([FBUDLR])(['2]?)"):
     var move = rubik.permByName(item.captures[0]).get
     case item.captures[1]
     of "'":

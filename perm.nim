@@ -1,6 +1,6 @@
 from algorithm import sort, reverse
 from nre       import re, findAll
-from random    import random, randomize
+from random    import rand, randomize
 from strutils  import parseInt
 
 ## Permutation data structures and basic algorithms
@@ -24,7 +24,7 @@ proc valid(p: Perm): bool =
   var check = p
   check.sort(system.cmp[Point])
 
-  for i in 0 .. <p.len:
+  for i in 0 ..< p.len:
     if int(check[i]) != i:
       return false
 
@@ -54,9 +54,9 @@ proc rotateToMin[T](list: var seq[T]) =
 proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
   if data.len > N:
     raise PermError.newException("seq length mismatch")
-  for i in 0 .. <data.len:
+  for i in 0 ..< data.len:
     result[i] = Point(data[i])
-  for i in data.len .. <N:
+  for i in data.len ..< N:
     result[i] = Point(i)
   if not result.valid:
     raise PermError.newException("seq invalid")
@@ -67,22 +67,22 @@ proc newCycle*(N: static[int], data: seq[int]): Cycle[N] =
     raise PermError.newException("seq length is invalid")
  
   result = newSeq[Point](data.len)
-  for i in 0 .. <data.len:
+  for i in 0 ..< data.len:
     result[i] = Point(data[i])
 
   rotateToMin(result)
 
 
 proc identity*(N: static[int]): Perm[N] =
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     result[i] = Point(i)
 
 
 # Knuth shuffle
 proc randomPerm*(N: static[int]): Perm[N] =
   result = N.identity
-  for i in countdown(result.high, 0):
-    let j = random(i+1)
+  for i in countdown(result.high, 1):
+    let j = rand(i)
     swap(result[i], result[j])
 
 
@@ -96,7 +96,7 @@ proc randomCycle*(N: static[int], size: int): Cycle[N] =
     result[i-1] = Point(i)
 
   for i in countdown(result.high, 1):
-    let j = random(i)
+    let j = rand(i-1)
     swap(result[i], result[j])
 
   rotateToMin(result)
@@ -108,7 +108,7 @@ proc toPerm*[N: static[int]](c: Cycle[N]): Perm[N] =
     return
 
   var point = c[0]
-  for i in 1 .. <c.len:
+  for i in 1 ..< c.len:
     result[point] = c[i]
     point = c[i]
   result[point] = c[0]
@@ -134,7 +134,7 @@ proc isIdentity*(p: Perm): bool =
 
 # optimized p.inverse == p
 proc isInvolution*[N: static[int]](p: Perm[N]): bool = 
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     if p[p[i]] != Point(i):
       return false
 
@@ -151,7 +151,7 @@ proc `$`*(p: Perm): string =
 
 
 proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     if p[i] != q[i]:
       return false
 
@@ -162,7 +162,7 @@ proc `==`*[N: static[int]](p: Perm[N], q: array[N, int]): bool =
 proc `===`*[T](c: Cycle, d: seq[T]): bool =
   if c.len != d.len:
     return false
-  for i in 0 .. <c.len:
+  for i in 0 ..< c.len:
     if c[i] != d[i]:
       return false
 
@@ -172,18 +172,18 @@ proc `===`*[T](c: Cycle, d: seq[T]): bool =
 # ------ actions ------
 
 proc inverse*[N: static[int]](p: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     result[p[i]] = Point(i)
 
 
 proc `*`*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     result[i] = q[p[i]]
 
 
 proc compose*[N: static[int]](list: varargs[Perm[N]]): Perm[N] =
   var p: Point
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     p = Point(i)
     for perm in list:
       p = perm[p]
@@ -197,16 +197,16 @@ proc power*[N: static[int]](p: Perm[N], n: int): Perm[N] =
   if n < 0:
     return p.inverse.power(-n)
 
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     var k = Point(i)
-    for j in 0 .. <n:
+    for j in 0 ..< n:
       k = p[k]
 
     result[i] = k
 
 
 proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
-  for i in 0 .. <N:
+  for i in 0 ..< N:
     var j = q[i]
     var k = p[i]
     result[j] = q[k]
@@ -214,7 +214,7 @@ proc conjugate*[N: static[int]](p: Perm[N], q: Perm[N]): Perm[N] =
 
 proc conjugate*[N: static[int]](c: Cycle[N], q: Perm[N]): Cycle[N] =
   result = newSeq[Point](c.len)
-  for i in 0 .. <c.len:
+  for i in 0 ..< c.len:
     result[i] = q[c[i]]
 
   rotateToMin(result)
@@ -454,7 +454,7 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
   for c in p.cycles:
     if c.len mod 2 == 1:
       continue
-    if r.isNil():
+    if r.len == 0:
       for j in countup(1, c.high-1, 2):
         result.add @[c[0], c[j], c[j+1]]
       r = @[c[0], c[c.high]]
@@ -463,9 +463,9 @@ proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
       result.add @[r[0], c[1], c[0]]
       for j in countup(2, c.high-1, 2):
         result.add @[c[0], c[j], c[j+1]]
-      r = nil
+      r = @[]
 
-  if not r.isNil():
+  if r.len > 0:
     raise PermError.newException("no split for odd perm")
 
 

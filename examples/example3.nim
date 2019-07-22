@@ -8,8 +8,8 @@ from strutils import splitLines, replace, `%`
 # choose group definition file
 const GroupDef = slurp "../groups/G_S3wrS5" # S3 wr S5
 
+var degree {.compileTime.}: int
 static:
-  var degree: int
   discard scanf(GroupDef, "n$i", degree)
 
 const W = degree

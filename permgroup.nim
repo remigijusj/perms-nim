@@ -1,6 +1,6 @@
 import perm, nre
 
-from random    import random, randomize
+from random    import rand, randomize
 from sequtils  import mapIt, anyIt, allIt
 from strutils  import join, splitLines, `%`
 
@@ -41,7 +41,7 @@ proc printGens*(gens: GroupGens): string =
 # Generate random generating set of desired size. Possibly enforce distinct elements.
 proc randomGens*(N: static[int], size: int; dist = true): GroupGens[N] =
   result = newSeq[Generator[N]](size)
-  for i in 0 .. <size:
+  for i in 0 ..< size:
     let name = $('A'.succ(i))
     var perm = N.randomPerm
     if dist:
@@ -119,9 +119,9 @@ proc randomPerm*[N: static[int]](gens: GroupGens[N], iterations: int): Perm[N] =
 
   var base = gens.perms
   var m, k: int
-  for i in 0 .. <iterations:
-    m = random(base.len)
-    k = random(base.len - 1)
+  for i in 0 ..< iterations:
+    m = rand(base.len - 1)
+    k = rand(base.len - 2)
     if k >= m: k.inc # avoids same element
     base[m] = base[m] * base[k]    
 

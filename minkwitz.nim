@@ -67,7 +67,7 @@ proc oneRound[N: static[int]](gens: GroupGens[N]; base: GroupBase; lim: float; c
 
 proc oneImprove[N: static[int]](gens: GroupGens[N]; base: GroupBase; lim: float; nu: var TransTable[N]): void =
   var t: PermWord[N]
-  for j in 0 .. <base.len:
+  for j in 0 ..< base.len:
     for x in nu[j]: # Image
       for y in nu[j]: # Image
         if x.isSome and y.isSome and (x.get.news or y.get.news):
@@ -81,14 +81,14 @@ proc oneImprove[N: static[int]](gens: GroupGens[N]; base: GroupBase; lim: float;
 
 
 proc fillOrbits[N: static[int]](gens: GroupGens[N]; base: GroupBase; lim: float; nu: var TransTable[N]): void =
-  for i in 0 .. <base.len:
+  for i in 0 ..< base.len:
     var orbit = newSeq[Point]() # partial orbit already found
     for y in nu[i]:
       if y.isSome:
         let j = y.get.perm[base[i]]
         if j notin orbit: orbit.add(j)
 
-    for j in i+1 .. <base.len:
+    for j in i+1 ..< base.len:
       for u, x in nu[j]:
         if x.isSome:
           let x1 = x.get.inverse(gens)
@@ -107,7 +107,7 @@ proc fillOrbits[N: static[int]](gens: GroupGens[N]; base: GroupBase; lim: float;
 #   w: limit for word size
 proc buildShortWordsSGS*[N: static[int]](gens: GroupGens[N]; base: GroupBase; n, s, w: int): TransTable[N] =
   var nu: TransTable[N]
-  for i in 0 .. <base.len:
+  for i in 0 ..< base.len:
     nu[i][base[i]] = some(N.identityPW)
 
   let max = n
@@ -134,18 +134,18 @@ proc buildShortWordsSGS*[N: static[int]](gens: GroupGens[N]; base: GroupBase; n,
 # Performs 3 basic checks if the constructed transversal table is valid.
 proc isValidSGS*[N: static[int]](nu: TransTable[N]; base: GroupBase): bool =
   result = true
-  for i in 0 .. <base.len:
+  for i in 0 ..< base.len:
     # diagonal identities
     let p = nu[i][i].get.perm
     if not p.isIdentity:
       result = false
 
-    for j in 0 .. <N:
+    for j in 0 ..< N:
       if nu[i][j].isSome:
         let p = nu[i][j].get.perm
 
         # stabilizes points upto i
-        for k in 0 .. <i:
+        for k in 0 ..< i:
           if p[base[k]] != base[k]:
             result = false
         # correct transversal at i
@@ -155,9 +155,9 @@ proc isValidSGS*[N: static[int]](nu: TransTable[N]; base: GroupBase): bool =
 
 # TODO: tests
 proc quality*[N: static[int]](nu: TransTable[N]; base: GroupBase): int =
-  for i in 0 .. <base.len:
+  for i in 0 ..< base.len:
     var maxlen = 0
-    for j in 0 .. <N:
+    for j in 0 ..< N:
       if nu[i][j].isSome:
         let wordlen = nu[i][j].get.word.len
         if wordlen > maxlen:
@@ -169,7 +169,7 @@ proc quality*[N: static[int]](nu: TransTable[N]; base: GroupBase): int =
 proc factorizeM*[N: static[int]](gens: GroupGens[N]; base: GroupBase; nu: TransTable[N]; target: Perm[N]): seq[int] =
   var list = newSeq[int]()
   var perm = target
-  for i in 0 .. <base.len:
+  for i in 0 ..< base.len:
     let omega = perm[base[i]]
     perm = perm * nu[i][omega].get.perm
     list.add(nu[i][omega].get.word)
