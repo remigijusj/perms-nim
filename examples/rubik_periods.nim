@@ -2,7 +2,7 @@
 # https://www.reddit.com/r/dailyprogrammer/comments/776lcz/20171018_challenge_336_intermediate_repetitive/
 
 import "../permgroup"
-import nre, tables
+import nre
 
 from strutils import splitLines
 

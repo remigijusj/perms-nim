@@ -13,7 +13,7 @@ type TransTable*[N: static[int]] = array[N, array[N, Option[PermWord[N]]]]
 # Must be: len < N
 type GroupBase* = seq[Point]
 
-type FactorizeError* = object of Exception
+type FactorizeError* = object of CatchableError
 
 var debugM* {.global.} = false
 

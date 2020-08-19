@@ -5,7 +5,7 @@ from math      import ceil, ln
 
 ## Kalka-Teicher-Tsaban algorithm for permutation factorization.
 
-type FactorizeError* = object of Exception
+type FactorizeError* = object of CatchableError
 
 
 # Calc the sign of the generating set: -1 if any element is odd, 1 otherwise.

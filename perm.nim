@@ -15,7 +15,7 @@ type Cycle*[N: static[int]] = seq[Point]
 
 type Signature*[N: static[int]] = array[N+1, int]
 
-type PermError* = object of Exception
+type PermError* = object of CatchableError
 
 
 # ------ helpers ------
