@@ -20,7 +20,7 @@ type PermError* = object of CatchableError
 
 # ------ helpers ------
 
-proc valid(p: Perm): bool =
+proc isValid*(p: Perm): bool =
   var check = p
   check.sort(system.cmp[Point])
 
@@ -58,7 +58,7 @@ proc newPerm*(N: static[int], data: seq[int]): Perm[N] =
     result[i] = Point(data[i])
   for i in data.len ..< N:
     result[i] = Point(i)
-  if not result.valid:
+  if not result.isValid:
     raise PermError.newException("seq invalid")
 
 
@@ -92,8 +92,8 @@ proc randomCycle*(N: static[int], size: int): Cycle[N] =
     raise PermError.newException("size is invalid")
 
   result = newSeq[Point](size)
-  for i in 1 .. size:
-    result[i-1] = Point(i)
+  for i in 0 ..< size:
+    result[i] = Point(i)
 
   for i in countdown(result.high, 1):
     let j = rand(i-1)
@@ -442,6 +442,8 @@ proc splitCycles2[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
 # certain 3-cycles decomposition
 proc splitCycles3[N: static[int]](p: Perm[N]): seq[Cycle[N]] =
   result = @[]
+  if p.isIdentity:
+    return
   # odd cycles
   for c in p.cycles:
     if c.len mod 2 == 0:

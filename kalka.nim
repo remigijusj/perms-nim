@@ -79,21 +79,25 @@ proc traceBack(meta: seq[tuple[i, j: int]]): seq[int] =
 # Perform search by conjugation from the seed trying to cover all given cycles (target).
 proc coverCycles*(gens: GroupGens; seed, target: seq[Cycle]): seq[seq[int]] =
   result = newSeq[seq[int]](target.len)
+  if target.len == 0:
+    return
   var cnt = 0
   for c, meta in gens.conjuSearch(seed):
     if debug: echo(c, " <- ", meta[meta.high].i, ":", meta[meta.high].j)
-    let i = target.find(c)
-    if i >= 0:
-      result[i] = meta.traceBack
-      cnt.inc
-      if cnt >= target.len:
-        return
+    for i, wanted in target:
+      if wanted == c and result[i].len == 0:
+        result[i] = meta.traceBack
+        cnt.inc
+    if cnt >= target.len:
+      return
 
   if cnt < target.len:
     raise FactorizeError.newException("failed to cover all targets")
 
 
-proc nextPowerOver(k, size: int): int = ceil(ln(size.float) / ln(k.float)).int
+proc nextPowerOver(k, size: int): int =
+  if k <= 1: return 1
+  max(1, ceil(ln(size.float) / ln(k.float)).int)
 
 
 proc calcFactors(gens: GroupGens; meta, covers: seq[seq[int]]): seq[int] =
@@ -118,15 +122,38 @@ proc calcFactors(gens: GroupGens; meta, covers: seq[seq[int]]): seq[int] =
 # - full: performs full search upto minlevels even after 2,3-cycle is already found
 # - minlevels: (optional) number of levels to search for small cycle
 proc factorizeK*[N: static[int]](gens: GroupGens[N], target: Perm[N], full = false, minlevels = 0): seq[int] =
+  if not target.isValid or not gens.isNormalized or minlevels < 0:
+    raise ValueError.newException("valid permutations, normalized generators and nonnegative minlevels required")
+  if target.isIdentity:
+    return @[]
+  if gens.len == 0:
+    raise FactorizeError.newException("nonidentity target with no generators")
+  for i, gen in gens:
+    if gen.perm == target:
+      return @[i]
   # - stage 0
   let sign = gens.sign
+  if sign == 1 and target.sign == -1:
+    raise FactorizeError.newException("odd target is outside the even generated group")
   let length = (5 + sign) div 2 # 2 or 3
   let levels = max(minlevels, nextPowerOver(gens.len, N*N))
   # - stage 1
-  let (seed, meta) = gens.searchCycle(length, levels, N, full)
+  var (seed, meta) = gens.searchCycle(length, levels, N, full)
   if debug: echo("SEED: ", seed, "\nMETA: ", meta)
   if seed.len == 0:
     raise FactorizeError.newException("failed to find short cycle")
+  # In A3 and A4, 3-cycles split into two conjugacy classes. A seed and
+  # its inverse cover both; a single conjugation orbit need not suffice.
+  if length == 3 and N <= 4:
+    let opposite = seed[0].toPerm.inverse.cycles[0]
+    if opposite notin seed:
+      let root = meta[0]
+      var word: seq[int] = @[]
+      for j in countdown(root.high-1, 0):
+        word.add(gens[root[j]].inverse)
+      word.add(root[root.high])
+      seed.add(opposite)
+      meta.add(word)
   # - stage 2
   let cycles = target.splitCycles(length)
   let covers = gens.coverCycles(seed, cycles)

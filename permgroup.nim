@@ -1,4 +1,4 @@
-import perm, nre
+import perm, nre, sets
 
 from random    import rand, randomize
 from sequtils  import mapIt, anyIt, allIt
@@ -74,6 +74,19 @@ proc normalize*(gens: GroupGens): GroupGens =
       result.add((name: item.name & "'", perm: item.perm.inverse, inverse: i))
 
 
+proc isNormalized*(gens: GroupGens): bool =
+  ## Validate permutations and the inverse links used by word algorithms.
+  for item in gens:
+    if not item.perm.isValid:
+      return false
+  for item in gens:
+    if item.inverse < 0 or item.inverse >= gens.len:
+      return false
+    if not (item.perm * gens[item.inverse].perm).isIdentity:
+      return false
+  return true
+
+
 # Compose a sequence of generators given by indices
 # TODO: support negative numbers meaning inverse generators
 proc composeSeq*[N: static[int]](gens: GroupGens[N], list: seq[int]): Perm[N] =
@@ -86,6 +99,8 @@ proc composeSeq*[N: static[int]](gens: GroupGens[N], list: seq[int]): Perm[N] =
 # warning: assumes list does not start with -1
 proc grouped(list: seq[int]): seq[tuple[n: int, s: string]] =
   result = @[]
+  if list.len == 0:
+    return
   var prev = -1
   var count = 0
   for this in list:
@@ -163,13 +178,17 @@ iterator multiSearch*[N: static[int]](gens: GroupGens[N], levels: int): tuple[p:
   for level in 1 .. max_level:
     if debug: echo "--- ", level
     var mult = newSeq[Perm[N]](list.len * k)
+    var active = false
     for p, i in list.multiply(gens):
       if p.isZero or p.isIdentity:
         continue
       yield (p, i, level)
       mult[i] = p
+      active = true
       if debug: echo i, ": ", printCycles(p)
     swap(list, mult)
+    if not active:
+      break
 
 
 # Decode an index from the given level, get a sequence of generator indices
@@ -181,3 +200,26 @@ proc decodeIndex*(index, level, k: int): seq[int] =
   for i in countdown(level-1, 0):
     result[i] = val mod k
     val = val div k
+
+
+iterator shortWords*[N: static[int]](gens: GroupGens[N]; maxWords: int): tuple[p: Perm[N], word: seq[int]] =
+  ## Breadth-first traversal of distinct elements. Each yielded word is shortest
+  ## in this generator list; include inverses in the list for the symmetric metric.
+  ## At most maxWords nonidentity elements are stored/yielded. Finite groups exhaust.
+  var seen = initHashSet[Perm[N]]()
+  var queue: seq[tuple[p: Perm[N], word: seq[int]]] = @[(N.identity, newSeq[int]())]
+  seen.incl(N.identity)
+  var head = 0
+  var count = 0
+  while head < queue.len and count < maxWords:
+    let parent = queue[head]
+    inc head
+    for i, gen in gens:
+      let p = parent.p * gen.perm
+      if p notin seen:
+        seen.incl(p)
+        let word = parent.word & @[i]
+        queue.add((p, word))
+        inc count
+        yield (p, word)
+        if count >= maxWords: break
